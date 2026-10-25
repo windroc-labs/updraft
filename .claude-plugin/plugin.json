@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "updraft",
+  "displayName": "Updraft",
+  "description": "Autonomous end-to-end feature pipeline: worktree, spec + review loop, plan, orchestrator implementation, tests, code-review loop, docs — driven by named expert review teams and Ralph convergence loops.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Windroc",
+    "email": ""
+  },
+  "license": "MIT",
+  "keywords": [
+    "workflow",
+    "automation",
+    "orchestration",
+    "code-review",
+    "ralph-loop",
+    "subagents"
+  ]
+}

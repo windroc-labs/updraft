@@ -1,0 +1,9 @@
+# Changes to CI, the test suite and its fixtures, the roster lint and the frontmatter parser it
+# shares with the selector, and the plugin manifests need the user's review; the ruleset enforces
+# it by requiring code-owner review. Skills, agents, workflows, references and docs stay unowned.
+/.github/ @windroc
+/tests/ @windroc
+/scripts/lint-roster.py @windroc
+/scripts/_frontmatter.py @windroc
+/.claude-plugin/plugin.json @windroc
+/.codex-plugin/plugin.json @windroc

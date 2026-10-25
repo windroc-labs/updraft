@@ -1,0 +1,264 @@
+<div align="center">
+
+# Updraft
+
+English · [中文](docs/readme/README.zh-CN.md) · [日本語](docs/readme/README.ja.md) · [한국어](docs/readme/README.ko.md) · [Español](docs/readme/README.es.md) · [Français](docs/readme/README.fr.md) · [Português](docs/readme/README.pt.md)
+
+</div>
+
+A Claude Code and Codex plugin that turns one requirement into a review-ready git branch
+without asking you anything. It writes the work itself (code, docs, designs, data, plans),
+independent reviewer agents judge it, and it fixes until they all pass. It never merges.
+
+> Status: **v0.1.0**
+
+## Install
+
+In Claude Code, install it from the `windroc` marketplace:
+
+```
+/plugin marketplace add windroc-labs/agent-plugins-marketplace
+/plugin install updraft@windroc
+```
+
+The `/plugin` menu also works; to run a local checkout, start `claude --plugin-dir <path>`.
+Releases use explicit semver (currently `0.1.0`). To update, run
+`/plugin marketplace update windroc`, then the install line again. No other plugin is needed.
+
+**Codex.** Invoke the `updraft:build` or `updraft:light-build` skill with your
+requirement, or ask Codex to run a checkout's absolute `skills/build/SKILL.md` or
+`skills/light-build/SKILL.md`. Needs subagent support. Reviewers inherit the session
+model. No Codex marketplace manifest yet.
+
+## Use
+
+```
+/updraft:build add a function add(a,b) with a passing unit test
+/updraft:build path/to/spec.md
+/updraft:light-build add a --json flag to the status command
+```
+
+Expect a new worktree and branch, review loops that end in `VERDICT: PASS`, tests that
+really ran, one commit per task and per fix round, a final report, and no merge. Given a
+self-contained spec file, build skips S2 and S3. To iterate, run the next requirement from
+the finished run's branch. It continues that branch, with its own plan doc, a review of only its new
+commits, and the same PR.
+
+|  | `build` | `light-build` |
+| --- | --- | --- |
+| Steps | S1–S7 | S1, S4–S7 |
+| Spec | written (S2), reviewed (S3) | the requirement is the spec |
+| S6 panel | every core lens, plus the optional lenses the change matches | pinned: correctness, requirement-fidelity, doc, verification |
+| S6 re-review | failed lenses, plus every core lens | failed lenses, plus the verifier, plus correctness after a verifier FAIL |
+| Cap | 3 rounds per review phase, changeable in the requirement | 3 rounds |
+| Fits | complex work | simple tasks, or autonomy without spec rigor |
+
+light-build gates no scope. It runs whatever you give it. Picking the skill is your call.
+
+Two smaller skills run alone or inside another skill:
+
+```
+/updraft:review doc=path/to/prd.md requirement=path/to/request.md
+/updraft:council requirement=path/to/request.md <question and its options>
+```
+
+`review` reviews one document against its author's own words, fixing it until the
+reviewers pass or 3 rounds, with or without a git repo; `lenses=<dir>` swaps in your own
+reviewers. `council` gets independent picks at a fork: 2–4 fresh subagents see only the
+question, the requirement, the documents it names and read-only code.
+
+## How a run works
+
+```mermaid
+flowchart LR
+    S1[S1 Worktree] --> S2[S2 Spec] --> S3[S3 Spec review] --> S4[S4 Task list] --> S5[S5 Produce] --> S6[S6 Work review] --> S7[S7 Finish]
+    S1 -.->|light-build, or a spec file| S4
+    S3 -->|FAIL: fix| S3
+    S6 -->|FAIL: fix| S6
+```
+
+| Step | What happens |
+| --- | --- |
+| S1 Worktree | Stays on any branch but `main`, `master` or origin's default. Otherwise creates a worktree and a branch `<prefix>-<slug>`, the prefix being the ticket ID for one-ticket work, else `updraft`. Creates the plan doc and decides how to publish. |
+| S2 Spec | Writes the spec from the requirement and the code it touches. `check-spec.py` checks its sections and that every acceptance criterion has a test or check. |
+| S3 Spec review | Review loop over the spec. Each re-review covers the whole spec with the full panel. |
+| S4 Task list | Code-free. Each task is one revertable commit: files, cross-task interfaces, tests to write first, the checks it runs, commit message. The full verify command sits above the tasks, with the CI checks that run its tests when publishing. |
+| S5 Produce | Implements the tasks in order: new tests fail first, then the code, then checks covering only the changed files, then a commit. May hand a self-contained task to a fresh producer. No per-task review. |
+| S6 Work review | Review loop over the work at a pinned commit. Each fix round is one `fix(r<N>)` commit. |
+| S7 Finish | Report and integration options, a squash merge among them. Copies the plan docs to the project's plan location if its AGENTS.md or CLAUDE.md names one. |
+
+### One work-review round
+
+```mermaid
+flowchart TD
+    pin[Pin HEAD as reviewed_sha, push it when publishing] --> lenses[Reviewers read reviewed_sha]
+    pin --> verifier[Verifier: CI checks, or the full suite locally]
+    lenses --> judge{Every lens PASS?}
+    verifier --> judge
+    verifier -.->|PR conflicts with its base| merge[Merge the base, never rebase] --> pin
+    judge -->|yes| finish[S7 Finish]
+    judge -->|no, rounds left| fix[One fix for all blockers, one commit] --> pin
+    judge -->|no, at the cap| capped[Stop: capped-without-pass]
+```
+
+Rounds are batched: every verdict, then one fix, then one re-review. Only the reviewers'
+verdicts decide, in the strict `VERDICT / BLOCKING / NON-BLOCKING` grammar; the
+orchestrator never overrides one. A test command that ran 0 tests fails.
+
+## CI and pull requests
+
+A repo with CI never runs its full suite locally while CI can run it. The run publishes
+its branch as a draft PR, and the verifier reads the CI checks for the reviewed commit
+while the other reviewers read the code.
+
+| `publish` | When | Pushes | At the end |
+| --- | --- | --- | --- |
+| `pr` | the requirement asks for a PR | each task commit and each S6 pin | build has posted the reviewed spec as a comment; the report goes in the PR body; PR marked ready |
+| `ci` | a `pull_request` workflow, and `gh` authenticated for origin's host | each S6 pin | a draft PR, for you or a caller to adopt |
+| `none` | otherwise, or a push refused in `ci` | nothing | no PR; checks ran locally |
+
+- An open PR on the branch is adopted. A ready one goes back to draft for the run and is
+  marked ready on convergence, so nobody merges it mid-review.
+- S4 names the CI checks that run the tests. If none does, verification runs locally.
+- Before dispatching a review round, the run peeks at the PR for up to 20 seconds. A
+  merge conflict, or CI that already failed for the pinned commit, is fixed before any
+  reviewer runs; a red CI still counts as a round. CI still running never holds the round
+  up: the verifier waits for it alongside the other reviewers.
+- In `pr` mode, before pushing each task after the first, the run peeks at the previous
+  push's CI, which ran while it wrote the task, and fixes a red result or a conflict
+  right then, so it doesn't cost a review round.
+- A CI failure enters the fix loop like any blocker.
+- CI still unfinished an hour after the verifier's first look stops the run. It never
+  falls back to a local full suite.
+
+## Decisions and stops
+
+At a genuine fork (materially different trade-offs, or a choice costly to reverse) the run
+runs the council (`skills/council`): it logs its own pick, 2–4 fresh subagents answer from
+the question, the requirement, the documents it names and read-only code, and it decides
+and logs the tally. A
+delegated producer at a fork returns a `FORK:` marker instead, and the orchestrator decides
+and re-dispatches it.
+
+Every run ends with one fenced `updraft-result` JSON block, so a caller reads the
+outcome without parsing prose:
+
+```updraft-result
+{ "status": "converged", "branch": "updraft-add-json-flag", "base_ref": "<sha>", "head": "<sha>", "pr": "", "blockers": [], "reason": "" }
+```
+
+| `status` | When | `reason` |
+| --- | --- | --- |
+| `converged` | every lens passed and S7 ran | empty |
+| `capped-without-pass` | a review loop hit its cap | `oscillation`, `unfixable` or `requirements-conflict` |
+| `stopped` | a destructive op (force-push, write outside the worktree, history rewrite beyond the branch, rm or reset of uncommitted work) without automatic approval (Claude: Auto Mode) | `destructive-op` |
+| `stopped` | a phase failure or missing capability after one retry, CI past its deadline included | `phase-failure` |
+| `stopped` | a requirement that contradicts itself | `root-contradiction` |
+
+`pr` is the run's PR URL, a draft when `publish=ci`. `blockers` lists the open blocking
+items when not converged.
+
+## Call it from a workflow
+
+Both surfaces are skills, so another skill or workflow can call them by name, as it can
+`review` and `council` on their own. A nested run
+stays on the caller's branch unless that is a default branch, where it creates its own
+worktree. Its docs are named per requirement, so runs don't collide. The caller integrates
+the returned branch, read from the `updraft-result` block.
+
+## State and resume
+
+Each run keeps its state in one ignored plan doc, `.updraft/<slug>-plan.md` in its
+worktree (build adds a spec doc beside it): the verify command, a `RESUME:` line, the
+progress log, review items, Notes of codebase facts and the task list. After a context
+compaction the run rebuilds from it and `git log`. Running the same requirement again
+resumes an unfinished run.
+
+## Review roster (`agents/`)
+
+Each reviewer has one lens. A phase's `core` lenses always run; an `optional` lens runs
+when its `applies_to` matches the spec's keywords (S3) or the changed paths (S6). Ordinary
+reviewers are read-only and never run the full suite.
+
+| File | Lens | Phase | Tier |
+| --- | --- | --- | --- |
+| `reviewer-contract.md` | Authoring template inlined into ordinary reviewers (not dispatched); verification reviewer has a dedicated execution contract |  |  |
+| `spec-fitness-reviewer.md` | Spec fitness: gaps, ambiguity, scope, testability | spec | core |
+| `architecture-reviewer.md` | Structure, boundaries, coupling, extensibility | both | spec: core. work: optional, when a file is added, deleted, renamed or copied (`@structural`) |
+| `correctness-reviewer.md` | Logic, edge and boundary cases, error paths | work | core |
+| `requirement-fidelity-reviewer.md` | The requirement and spec built, nothing missing, drifted or added | work | core |
+| `doc-reviewer.md` | Docs anywhere in the repo the change made false; bloated doc edits | work | core |
+| `verification-reviewer.md` | Full checks at the reviewed SHA, locally or from CI: commands, exit codes, test and failure counts | work | core |
+| `code-quality-reviewer.md` | Readability, naming, duplication, dead code, complexity, comments | work | optional: code files |
+| `test-reviewer.md` | Tests assert the spec and cover new or changed code | work | optional: code or test files |
+| `performance-reviewer.md` | Complexity, N+1, allocation, leaks, hotspots | work | optional: code files |
+| `security-reviewer.md` | Authz, input validation, secrets, injection, supply chain | both | optional: auth, input, network, I/O, dependency or crypto signals |
+
+`scripts/select-panel.py` builds build's panel from each file's frontmatter
+(`lens`, `phase`, `tier`, `applies_to`), so a new lens is a new file. build runs every core
+lens and drops a marginal optional one only with a logged reason. `review` also takes an
+outside folder of reviewers written to `reviewer-contract.md`; they run as generic agents. On Claude Code each
+reviewer runs as `updraft:<name>` with its frontmatter `model:` and `effort:`; on Codex
+it inherits the session model. A re-reviewed lens starts fresh with its prior items and,
+in S6, the fix diff.
+
+### Plugin workflow (`workflows/review-round.js`)
+
+The default transport for a round, `Workflow({name: "updraft:updraft-review-round", args})`,
+runs every member in parallel and schema-validates each verdict. Without Workflow, the
+skills dispatch natively.
+
+- Input `args`: `{phase, members: [{agent, subagent_type, prompt}]}`.
+- Output: `{phase, verdicts: [{agent, VERDICT, BLOCKING, NON_BLOCKING, synthetic}]}`, in
+  member order. `VERDICT` is `PASS` only when the reviewer said `PASS` with no `BLOCKING`.
+  A member with no verdict becomes `FAIL` with `synthetic: true`; the skills re-dispatch
+  it once natively.
+
+## Local development
+
+```
+claude --plugin-dir /path/to/updraft                       # load the working copy
+/reload-plugins                                            # after an edit, in session
+claude plugin validate /path/to/updraft --strict           # manifests and frontmatter
+python3 scripts/lint-roster.py                             # after editing agents/
+python3 tests/test_scripts.py                              # helper-script tests, stdlib only
+```
+
+Also run the [smoke protocol](CONTRIBUTING.md#smoke-protocol). Per-build dev docs go in
+gitignored `dev-docs/<date>-<slug>-{spec,plan}.md`.
+
+Repo layout:
+
+```
+updraft/
+├── .claude-plugin/
+│   └── plugin.json               # name: updraft (version 0.1.0)
+├── .codex-plugin/
+│   └── plugin.json               # Codex manifest: same name and version
+├── skills/
+│   ├── build/SKILL.md            # /updraft:build
+│   ├── build/spec.md             # spec-writing guide for S2
+│   ├── build/scripts/check-spec.py     # S2 spec structure and AC coverage
+│   ├── light-build/SKILL.md      # /updraft:light-build
+│   ├── review/SKILL.md           # /updraft:review: review one document
+│   └── council/SKILL.md          # /updraft:council: independent picks at a fork
+├── references/
+│   ├── updraft-common.md         # run rules build and light-build share
+│   └── review-round.md           # how a review round runs and loops
+├── scripts/
+│   ├── select-panel.py           # (phase, signals) → panel JSON
+│   ├── ci-verdict.py             # one commit's CI checks → verifier verdict
+│   ├── pr.py                     # draft PR start / push / spec / finish
+│   ├── resolve-branch.py         # S1: resume / stay / reuse / create / stop
+│   ├── _frontmatter.py           # parser shared by the selector and the roster lint
+│   └── lint-roster.py            # roster lint
+├── workflows/
+│   └── review-round.js           # plugin workflow: one parallel review round
+├── agents/                       # review roster
+│   ├── reviewer-contract.md      # authoring template, inlined into ordinary reviewers
+│   └── *-reviewer.md             # one lens each
+├── tests/
+│   └── test_scripts.py           # stdlib unittest for the scripts
+├── AGENTS.md                     # contributor guidance for Claude Code and Codex
+└── README.md
+```

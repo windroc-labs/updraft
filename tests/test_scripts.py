@@ -2025,7 +2025,7 @@ class StandaloneSkillTests(unittest.TestCase):
         for token in ("With `verification=ci`, the `verification` lens is",
                       "`python3 <abs path of ../scripts/ci-verdict.py> --worktree <worktree> --sha <reviewed_sha> --plan-doc <plan_doc>`",
                       "not an agent", "never dispatch `updraft:verification-reviewer`",
-                      "only on exit 3"):
+                      "only on exit 3 or another unexpected exit"):
             with self.subTest(token=token):
                 self.assertIn(token, rounds)
         for token in ("while they work", "Exit 0 or 1: its stdout is the `verification` verdict",

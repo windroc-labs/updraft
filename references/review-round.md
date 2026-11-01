@@ -42,7 +42,7 @@ With `verification=local`, the lens is the `updraft:verification-reviewer` agent
 runs the complete checks. With `verification=ci`, the `verification` lens is
 `python3 <abs path of ../scripts/ci-verdict.py> --worktree <worktree> --sha <reviewed_sha> --plan-doc <plan_doc>`,
 which you run in step 5, not an agent: never dispatch `updraft:verification-reviewer`
-then, except as the fallback, only on exit 3 (step 5).
+then, except as the fallback, only on exit 3 or another unexpected exit (step 5).
 
 Run each round in these steps:
 

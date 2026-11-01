@@ -47,7 +47,7 @@ build 会跳过 S2 和 S3。要继续迭代，就在上一次 run 完成的 bran
 | --- | --- | --- |
 | 步骤 | S1–S7 | S1、S4–S7 |
 | Spec | 编写（S2），审阅（S3） | requirement 即 spec |
-| S6 panel | 所有 core lens，加上与改动匹配的 optional lens | 固定：correctness、requirement-fidelity、doc、verification |
+| S6 panel | 所有 core lens，加上与改动匹配的 optional lens | 与 build 相同 |
 | S6 re-review | 失败的 lens，加上所有 core lens | 失败的 lens，加上 verifier，verifier FAIL 后再加 correctness |
 | 上限 | 每个 review 阶段 3 轮，可在 requirement 中修改 | 3 轮 |
 | 适合 | 复杂工作 | 简单任务，或想要自主运行而不需要 spec 的严谨度 |
@@ -182,7 +182,7 @@ Notes 以及 task list。上下文压缩之后，run 会依据它和 `git log` �
 | `security-reviewer.md` | 授权、输入校验、密钥、注入、供应链 | both | optional：认证、输入、网络、I/O、依赖或加密相关信号 |
 
 `scripts/select-panel.py` 依据每个文件的 frontmatter（`lens`、`phase`、`tier`、`applies_to`）
-为 build 组建 panel，因此新增一个 lens 就是新增一个文件。build 运行所有 core lens，只有在记录理由时
+为 build 和 light-build 组建 panel，因此新增一个 lens 就是新增一个文件。两者都运行所有 core lens，只有在记录理由时
 才会去掉一个作用不大的 optional lens。`review` 也接受一个外部 reviewer 文件夹，其中的 reviewer 按
 `reviewer-contract.md` 编写，作为通用 agent 运行。在 Claude Code 上，每个 reviewer 以
 `updraft:<name>` 运行，使用其 frontmatter 中的 `model:` 和 `effort:`；在 Codex 上则沿用会话的模型。

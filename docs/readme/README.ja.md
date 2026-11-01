@@ -46,7 +46,7 @@ build は S2 と S3 を飛ばします。続けて反復するには、完了し
 | --- | --- | --- |
 | ステップ | S1–S7 | S1、S4–S7 |
 | Spec | 作成（S2）、レビュー（S3） | requirement がそのまま spec |
-| S6 panel | すべての core lens と、変更に一致する optional lens | 固定: correctness、requirement-fidelity、doc、verification |
+| S6 panel | すべての core lens と、変更に一致する optional lens | build と同じ |
 | S6 re-review | 失敗した lens とすべての core lens | 失敗した lens と verifier、verifier が FAIL した後は correctness も |
 | 上限 | レビューフェーズごとに 3 ラウンド、requirement で変更可能 | 3 ラウンド |
 | 向いている作業 | 複雑な作業 | 単純なタスク、または spec の厳密さなしで自律的に進めたいとき |
@@ -179,8 +179,8 @@ run はこれと `git log` から復元します。同じ requirement をもう�
 | `performance-reviewer.md` | 計算量、N+1、メモリ確保、リーク、ホットスポット | work | optional: コードファイル |
 | `security-reviewer.md` | 認可、入力検証、シークレット、インジェクション、サプライチェーン | both | optional: 認証、入力、ネットワーク、I/O、依存関係、暗号のシグナル |
 
-`scripts/select-panel.py` は各ファイルの frontmatter（`lens`、`phase`、`tier`、`applies_to`）から build の panel を組むので、
-新しい lens は新しいファイルを 1 つ足すだけです。build はすべての core lens を実行し、効果の薄い optional lens は理由を記録したときだけ外します。
+`scripts/select-panel.py` は各ファイルの frontmatter（`lens`、`phase`、`tier`、`applies_to`）から build と light-build の panel を組むので、
+新しい lens は新しいファイルを 1 つ足すだけです。どちらもすべての core lens を実行し、効果の薄い optional lens は理由を記録したときだけ外します。
 `review` は `reviewer-contract.md` に沿って書かれた外部の reviewer フォルダも受け付け、それらは汎用 agent として実行されます。Claude Code では
 各 reviewer は `updraft:<name>` として、frontmatter の `model:` と `effort:` で実行されます。Codex ではセッションのモデルを引き継ぎます。
 re-review される lens は、前回のレビュー項目と（S6 では）修正の diff を持って新たに始まります。

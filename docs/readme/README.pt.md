@@ -46,7 +46,7 @@ Ela continua essa branch, com seu próprio plan doc, uma revisão apenas dos nov
 | --- | --- | --- |
 | Etapas | S1–S7 | S1, S4–S7 |
 | Spec | escrita (S2), revisada (S3) | o requirement é a spec |
-| Panel do S6 | todas as lenses core, mais as optional que combinam com a mudança | fixo: correctness, requirement-fidelity, doc, verification |
+| Panel do S6 | todas as lenses core, mais as optional que combinam com a mudança | igual ao build |
 | Re-review do S6 | lenses que falharam, mais todas as core | lenses que falharam, mais o verifier, mais correctness após um FAIL do verifier |
 | Limite | 3 rodadas por fase de revisão, alterável no requirement | 3 rodadas |
 | Indicado para | trabalho complexo | tarefas simples, ou autonomia sem o rigor de uma spec |
@@ -187,9 +187,9 @@ somente leitura e nunca rodam a suíte completa.
 | `performance-reviewer.md` | Complexidade, N+1, alocação, vazamentos, pontos críticos | work | optional: arquivos de código |
 | `security-reviewer.md` | Autorização, validação de entrada, segredos, injeção, cadeia de suprimentos | both | optional: sinais de autenticação, entrada, rede, E/S, dependências ou criptografia |
 
-`scripts/select-panel.py` monta o panel do build a partir do frontmatter de cada arquivo
-(`lens`, `phase`, `tier`, `applies_to`), então uma lens nova é um arquivo novo. O build roda todas as lenses core e
-descarta uma optional marginal só com um motivo registrado. `review` também aceita uma pasta externa de reviewers
+`scripts/select-panel.py` monta os panels do build e do light-build a partir do frontmatter de cada arquivo
+(`lens`, `phase`, `tier`, `applies_to`), então uma lens nova é um arquivo novo. Ambos rodam todas as lenses core e
+descartam uma optional marginal só com um motivo registrado. `review` também aceita uma pasta externa de reviewers
 escritos conforme `reviewer-contract.md`; eles rodam como agentes genéricos. No Claude Code, cada reviewer roda como
 `updraft:<name>` com o `model:` e o `effort:` do seu frontmatter; no Codex, herda o modelo da sessão. Uma lens
 revisada de novo começa do zero com os itens anteriores e, no S6, o diff da correção.

@@ -48,7 +48,7 @@ y el mismo PR.
 | --- | --- | --- |
 | Pasos | S1–S7 | S1, S4–S7 |
 | Spec | escrita (S2), revisada (S3) | el requirement es la spec |
-| Panel de S6 | todas las lenses core, más las optional que encajan con el cambio | fijo: correctness, requirement-fidelity, doc, verification |
+| Panel de S6 | todas las lenses core, más las optional que encajan con el cambio | igual que build |
 | Re-review de S6 | lenses que fallaron, más todas las core | lenses que fallaron, más el verifier, más correctness tras un FAIL del verifier |
 | Límite | 3 rondas por fase de revisión, modificable en el requirement | 3 rondas |
 | Adecuado para | trabajo complejo | tareas simples, o autonomía sin el rigor de una spec |
@@ -191,9 +191,9 @@ reviewers ordinarios son de solo lectura y nunca ejecutan la suite completa.
 | `performance-reviewer.md` | Complejidad, N+1, asignación de memoria, fugas, puntos calientes | work | optional: archivos de código |
 | `security-reviewer.md` | Autorización, validación de entradas, secretos, inyección, cadena de suministro | both | optional: señales de autenticación, entrada, red, E/S, dependencias o criptografía |
 
-`scripts/select-panel.py` arma el panel de build a partir del frontmatter de cada archivo
-(`lens`, `phase`, `tier`, `applies_to`), así que una lens nueva es un archivo nuevo. build ejecuta todas las
-lenses core y descarta una optional marginal solo con una razón registrada. `review` también acepta una carpeta
+`scripts/select-panel.py` arma los panels de build y light-build a partir del frontmatter de cada archivo
+(`lens`, `phase`, `tier`, `applies_to`), así que una lens nueva es un archivo nuevo. Ambos ejecutan todas las
+lenses core y descartan una optional marginal solo con una razón registrada. `review` también acepta una carpeta
 externa de reviewers escritos según `reviewer-contract.md`; se ejecutan como agentes genéricos. En Claude Code
 cada reviewer se ejecuta como `updraft:<name>` con el `model:` y el `effort:` de su frontmatter; en Codex
 hereda el modelo de la sesión. Una lens que se vuelve a revisar empieza de cero con sus elementos anteriores y,

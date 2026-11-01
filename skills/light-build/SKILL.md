@@ -1,6 +1,6 @@
 ---
 name: light-build
-description: "Low-ceremony autonomous build: work on the current feature branch or a new isolated worktree, write a task list, implement each task itself, and run a capped correctness + requirement-fidelity + doc + verification review to a single review-ready branch, plus a draft PR when the repo has CI or you ask for one (never merges). No spec doc or spec review, and no other plugin needed. Use for simple tasks, or when you want autonomy and council decisions without build's spec rigor. Pass the requirement text."
+description: "Low-ceremony autonomous build: work on the current feature branch or a new isolated worktree, write a task list, implement each task itself, and run a capped review by every core lens plus the optional lenses the change matches to a single review-ready branch, plus a draft PR when the repo has CI or you ask for one (never merges). No spec doc or spec review, and no other plugin needed. Use for simple tasks, or when you want autonomy and council decisions without build's spec rigor. Pass the requirement text."
 argument-hint: "<requirements>"
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent, Task, Workflow, ToolSearch, EnterWorktree, ExitWorktree, TodoWrite
 ---
@@ -54,9 +54,8 @@ Per common: Finish (S7). Then emit the result block.
 
 ## Review settings (S6)
 
-- **Panel**: pin `updraft:correctness-reviewer`, `updraft:requirement-fidelity-reviewer`,
-  `updraft:doc-reviewer` and `updraft:verification-reviewer`. Add no optional lens.
-- **Freeze line**: `S6 panel: pinned=[correctness,requirement-fidelity,doc,verification] verification=<local|ci> transport=Workflow`.
+- **Panel source**: `python3 ../../scripts/select-panel.py --phase work --worktree <worktree> --base <base_ref>`.
+- **Freeze line**: `S6 panel: core=[…] +optional=[…] verification=<local|ci> transport=Workflow`.
 - **Cap**: 3 rounds, `r1` plus up to two fixes and re-reviews.
 - **Re-review set**: the lenses that failed, plus the verifier, and correctness after a
   verifier FAIL. Other lenses carry their PASS.

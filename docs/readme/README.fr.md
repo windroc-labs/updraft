@@ -48,7 +48,7 @@ nouveaux commits, et la même PR.
 | --- | --- | --- |
 | Étapes | S1–S7 | S1, S4–S7 |
 | Spec | rédigée (S2), relue (S3) | le requirement tient lieu de spec |
-| Panel S6 | toutes les lenses core, plus les optional qui correspondent au changement | fixe : correctness, requirement-fidelity, doc, verification |
+| Panel S6 | toutes les lenses core, plus les optional qui correspondent au changement | comme build |
 | Re-review S6 | les lenses en échec, plus toutes les core | les lenses en échec, plus le verifier, plus correctness après un FAIL du verifier |
 | Plafond | 3 rounds par phase de revue, modifiable dans le requirement | 3 rounds |
 | Pour | le travail complexe | les tâches simples, ou l'autonomie sans la rigueur d'une spec |
@@ -191,9 +191,9 @@ ordinaires sont en lecture seule et ne lancent jamais la suite complète.
 | `performance-reviewer.md` | Complexité, N+1, allocations, fuites, points chauds | work | optional : fichiers de code |
 | `security-reviewer.md` | Autorisations, validation des entrées, secrets, injection, chaîne d'approvisionnement | both | optional : signaux d'authentification, d'entrée, de réseau, d'E/S, de dépendances ou de cryptographie |
 
-`scripts/select-panel.py` construit le panel de build à partir du frontmatter de chaque fichier
-(`lens`, `phase`, `tier`, `applies_to`) : une nouvelle lens, c'est un nouveau fichier. build lance toutes les
-lenses core et n'écarte une optional marginale qu'avec une raison consignée. `review` accepte aussi un dossier
+`scripts/select-panel.py` construit les panels de build et light-build à partir du frontmatter de chaque fichier
+(`lens`, `phase`, `tier`, `applies_to`) : une nouvelle lens, c'est un nouveau fichier. Les deux lancent toutes les
+lenses core et n'écartent une optional marginale qu'avec une raison consignée. `review` accepte aussi un dossier
 externe de reviewers rédigés selon `reviewer-contract.md` ; ils tournent comme agents génériques. Sur Claude Code,
 chaque reviewer tourne en tant que `updraft:<name>` avec le `model:` et l'`effort:` de son frontmatter ; sur
 Codex, il hérite du modèle de la session. Une lens relue repart de zéro avec ses éléments précédents et, en S6,

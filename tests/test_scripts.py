@@ -803,8 +803,6 @@ class SkillContractTests(unittest.TestCase):
         self.assertEqual(tracked, ["skills/build/spec.md"])
         self.assertIn("select-panel.py", text)
         self.assertIn("spec_file=", text)
-        self.assertIn("every core lens", flat(text))
-        self.assertIn("only with a logged `decision(panel)` line", flat(text))
         self.assertNotIn("## Preflight", text)
         self.assertNotIn("Load config", text)
 
@@ -813,9 +811,25 @@ class SkillContractTests(unittest.TestCase):
             text = fh.read()
         self.assertIn("data shape", text)
         self.assertIn("correctness after a verifier FAIL", flat(text))
-        for lens in ("correctness", "requirement-fidelity", "doc"):
-            self.assertIn(f"updraft:{lens}-reviewer", text, lens)
-        self.assertNotIn("select-panel", text)
+
+    def test_pipelines_select_the_s6_panel_by_one_rule(self):
+        rule = ("The panel is every `core` agent, plus the `optional` agents you judge relevant;"
+                " drop a marginal optional one only with a logged `decision(panel)` line"
+                " naming it and why.")
+        with open(os.path.join(REPO, "references", "updraft-common.md"), encoding="utf-8") as fh:
+            self.assertEqual(flat(fh.read()).count(rule), 1)
+        for skill in ("build", "light-build"):
+            with self.subTest(skill=skill):
+                with open(os.path.join(SKILLS, skill, "SKILL.md"), encoding="utf-8") as fh:
+                    own = fh.read().replace("\\|", "|")  # build's table escapes `|`
+                self.assertIn("`python3 ../../scripts/select-panel.py --phase work"
+                              " --worktree <worktree> --base <base_ref>`", own)
+                self.assertIn("`S6 panel: core=[…] +optional=[…] verification=<local|ci>"
+                              " transport=Workflow`", own)
+                self.assertNotIn("decision(panel)", own)
+                self.assertNotIn("pinned", own)
+                self.assertNotIn("Add no optional lens", own)
+                self.assertNotIn("correctness + requirement-fidelity + doc + verification", own)
 
     def test_retired_shapes_stay_gone(self):
         for skill in self.SKILL_STEPS:

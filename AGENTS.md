@@ -42,9 +42,8 @@ The two surfaces — `skills/build/SKILL.md` and `skills/light-build/SKILL.md` �
 **orchestrator prompts**, not code. They are **skills** (model-invocable, so composable as a
 step inside a larger skill/workflow); users still type `/updraft:build` /
 `/updraft:light-build`. `light-build` is the low-ceremony surface: a harness
-(S1 → S4 → S5 → S6 → S7) with no spec doc and no spec review; S6 is a pinned panel
-capped at 3 rounds
-(correctness + requirement-fidelity + doc + verification). It does not gate scope — surface choice is
+(S1 → S4 → S5 → S6 → S7) with no spec doc and no spec review; its S6 panel comes from
+the selector like build's and is capped at 3 rounds. It does not gate scope — surface choice is
 the user's responsibility. When invoked, the *main-session agent implements the work itself* (S5 tasks and S6 fixes,
 optionally handing a self-contained task to a fresh producer) while independent reviewer
 subagents judge it; only their verdicts decide. Both read `references/updraft-common.md` (the run rules they share:

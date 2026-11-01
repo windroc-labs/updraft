@@ -46,7 +46,7 @@ commit 하나씩, 최종 보고서, 그리고 병합 없음. 자기 완결적인
 | --- | --- | --- |
 | 단계 | S1–S7 | S1, S4–S7 |
 | Spec | 작성(S2), 리뷰(S3) | requirement가 곧 spec |
-| S6 panel | 모든 core lens, 그리고 변경에 해당하는 optional lens | 고정: correctness, requirement-fidelity, doc, verification |
+| S6 panel | 모든 core lens, 그리고 변경에 해당하는 optional lens | build와 같음 |
 | S6 re-review | 실패한 lens, 그리고 모든 core lens | 실패한 lens, verifier, verifier FAIL 후에는 correctness도 |
 | 상한 | 리뷰 단계마다 3라운드, requirement에서 변경 가능 | 3라운드 |
 | 적합한 작업 | 복잡한 작업 | 단순한 작업, 또는 spec의 엄격함 없이 자율적으로 진행하고 싶을 때 |
@@ -177,8 +177,8 @@ verify 명령, `RESUME:` 줄, 진행 로그, 리뷰 항목, 코드베이스 사�
 | `performance-reviewer.md` | 복잡도, N+1, 메모리 할당, 누수, 핫스팟 | work | optional: 코드 파일 |
 | `security-reviewer.md` | 인가, 입력 검증, 시크릿, 인젝션, 공급망 | both | optional: 인증, 입력, 네트워크, I/O, 의존성 또는 암호화 신호 |
 
-`scripts/select-panel.py`는 각 파일의 frontmatter(`lens`, `phase`, `tier`, `applies_to`)로 build의 panel을 구성하므로,
-새 lens는 새 파일 하나입니다. build는 모든 core lens를 실행하고, 별 효과 없는 optional lens는 이유를 기록할 때만 뺍니다.
+`scripts/select-panel.py`는 각 파일의 frontmatter(`lens`, `phase`, `tier`, `applies_to`)로 build와 light-build의 panel을 구성하므로,
+새 lens는 새 파일 하나입니다. 둘 다 모든 core lens를 실행하고, 별 효과 없는 optional lens는 이유를 기록할 때만 뺍니다.
 `review`는 `reviewer-contract.md`에 맞춰 작성된 외부 reviewer 폴더도 받으며, 이들은 범용 agent로 실행됩니다. Claude Code에서는
 각 reviewer가 frontmatter의 `model:`과 `effort:`로 `updraft:<name>`으로 실행되고, Codex에서는 세션의 모델을 그대로 씁니다.
 re-review되는 lens는 이전 리뷰 항목과 (S6에서는) 수정 diff를 가지고 새로 시작합니다.

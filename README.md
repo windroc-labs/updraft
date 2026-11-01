@@ -48,7 +48,7 @@ commits, and the same PR.
 | --- | --- | --- |
 | Steps | S1–S7 | S1, S4–S7 |
 | Spec | written (S2), reviewed (S3) | the requirement is the spec |
-| S6 panel | every core lens, plus the optional lenses the change matches | pinned: correctness, requirement-fidelity, doc, verification |
+| S6 panel | every core lens, plus the optional lenses the change matches | same as build |
 | S6 re-review | failed lenses, plus every core lens | failed lenses, plus the verifier, plus correctness after a verifier FAIL |
 | Cap | 3 rounds per review phase, changeable in the requirement | 3 rounds |
 | Fits | complex work | simple tasks, or autonomy without spec rigor |
@@ -194,9 +194,9 @@ reviewers are read-only and never run the full suite.
 | `performance-reviewer.md` | Complexity, N+1, allocation, leaks, hotspots | work | optional: code files |
 | `security-reviewer.md` | Authz, input validation, secrets, injection, supply chain | both | optional: auth, input, network, I/O, dependency or crypto signals |
 
-`scripts/select-panel.py` builds build's panel from each file's frontmatter
-(`lens`, `phase`, `tier`, `applies_to`), so a new lens is a new file. build runs every core
-lens and drops a marginal optional one only with a logged reason. `review` also takes an
+`scripts/select-panel.py` builds the build and light-build panels from each file's frontmatter
+(`lens`, `phase`, `tier`, `applies_to`), so a new lens is a new file. Both run every core
+lens and drop a marginal optional one only with a logged reason. `review` also takes an
 outside folder of reviewers written to `reviewer-contract.md`; they run as generic agents. On Claude Code each
 reviewer runs as `updraft:<name>` with its frontmatter `model:` and `effort:`; on Codex
 it inherits the session model. A re-reviewed lens starts fresh with its prior items and,

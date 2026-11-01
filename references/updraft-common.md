@@ -235,7 +235,7 @@ does every `gh` step and keeps the state beside the plan doc. Each call prints
   refused push in `ci` returns `publish=none` with the reason: log `decision(publish)` and
   verify locally from then on.
 - **Spec** (build). `pr.py spec --plan-doc <plan_doc> --spec-doc <spec doc>` at S4.
-- **Conflicts.** A `CONFLICT:` from the PR peek before a round, or from the verifier,
+- **Conflicts.** A `CONFLICT:` from the PR peek before a round, or from the CI lens,
   means the PR conflicts with its base, so CI will not run. With `<base>` from that line: `git -C <worktree> fetch origin <base>`,
   `git -C <worktree> merge origin/<base>` (never rebase), resolve, run targeted checks,
   commit. Set RESUME `base_ref` to `git -C <worktree> merge-base HEAD origin/<base>`, so

@@ -84,10 +84,13 @@ Run each round in these steps:
      10-minute tool timeout (Bash `timeout: 600000`). Never hold the members back for it,
      nor it for them.
      Exit 0 or 1: its stdout is the `verification` verdict, in the strict grammar.
-     Exit 4: run it again. Exit 3 (`NO_CI:`): dispatch `updraft:verification-reviewer`
-     now as a fresh subagent (`Task`) with its prompt; its verdict is the `verification`
-     verdict, and the round line notes the `NO_CI:` reason. Exit 5 (`CONFLICT:`): merge
-     the base and re-run the round (Publish). Exit 6 (`TIMEOUT:`): safety stop 3.
+     Exit 4: run it again.
+     Exit 3 (`NO_CI:`), or any other exit: dispatch `updraft:verification-reviewer` now
+     as a fresh subagent (`Task`) with its prompt; its verdict is the `verification`
+     verdict, and the round line notes the script's reason.
+     Exit 5 (`CONFLICT:`) or 6 (`TIMEOUT:`): touch nothing until every verdict is back (step 6);
+     then exit 5 means merge the base and re-run the round (Publish), and exit 6 means
+     safety stop 3.
 6. **Wait for every verdict.** Never poll or judge early. A status message is not a verdict.
 7. **Recheck the revision (work).** HEAD still equals `reviewed_sha` and status is still
    empty. If the only dirty paths are ones the verifier reports as leaked, judge normally;

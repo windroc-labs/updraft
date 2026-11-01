@@ -702,7 +702,7 @@ class SkillContractTests(unittest.TestCase):
             "every lens passing means the phase converged: advance",
             "If HEAD moved, take safety stop 3",
             "never a local full-suite run",
-            "Exit 5 (`CONFLICT:`): merge the base and re-run the round (Publish)",
+            "exit 5 means merge the base and re-run the round (Publish)",
             "`git -C <worktree> merge origin/<base>` (never rebase)",
             "Set RESUME `base_ref` to `git -C <worktree> merge-base HEAD origin/<base>`",
             "re-run the round like an interrupted one", "**Targeted checks.**", "safety stop 3 naming the conflicting files",
@@ -1999,7 +1999,7 @@ class StandaloneSkillTests(unittest.TestCase):
             with self.subTest(token=token):
                 self.assertIn(token, rounds)
         common = flat(self.read("references", "updraft-common.md"))
-        self.assertIn("A `CONFLICT:` from the PR peek before a round, or from the verifier", common)
+        self.assertIn("A `CONFLICT:` from the PR peek before a round, or from the CI lens", common)
         self.assertIn("`Rules: <abs SKILL.md path> <abs path of this file> <abs path of review-round.md>`", common)
         self.assertIn("the decisions and `omitted` lines", common)
 
@@ -2029,9 +2029,10 @@ class StandaloneSkillTests(unittest.TestCase):
             with self.subTest(token=token):
                 self.assertIn(token, rounds)
         for token in ("while they work", "Exit 0 or 1: its stdout is the `verification` verdict",
-                      "Exit 4: run it again", "Exit 3 (`NO_CI:`): dispatch `updraft:verification-reviewer`",
-                      "Exit 5 (`CONFLICT:`): merge the base and re-run the round (Publish)",
-                      "Exit 6 (`TIMEOUT:`): safety stop 3"):
+                      "Exit 4: run it again",
+                      "Exit 3 (`NO_CI:`), or any other exit: dispatch `updraft:verification-reviewer`",
+                      "Exit 5 (`CONFLICT:`) or 6 (`TIMEOUT:`): touch nothing until every verdict is back (step 6)",
+                      "exit 5 means merge the base and re-run the round (Publish), and exit 6 means safety stop 3"):
             with self.subTest(token=token):
                 self.assertIn(token, dispatch)
         self.assertNotIn("ci_script", rounds)

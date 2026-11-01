@@ -48,7 +48,7 @@ nouveaux commits, et la même PR.
 | --- | --- | --- |
 | Étapes | S1–S7 | S1, S4–S7 |
 | Spec | rédigée (S2), relue (S3) | le requirement tient lieu de spec |
-| Panel S6 | toutes les lenses core, plus les optional qui correspondent au changement | fixe : correctness, requirement-fidelity, doc, verification |
+| Panel S6 | toutes les lenses core, plus les optional qui correspondent au changement | comme build |
 | Re-review S6 | les lenses en échec, plus toutes les core | les lenses en échec, plus le verifier, plus correctness après un FAIL du verifier |
 | Plafond | 3 rounds par phase de revue, modifiable dans le requirement | 3 rounds |
 | Pour | le travail complexe | les tâches simples, ou l'autonomie sans la rigueur d'une spec |
@@ -92,7 +92,7 @@ flowchart LR
 ```mermaid
 flowchart TD
     pin[Pin HEAD as reviewed_sha, push it when publishing] --> lenses[Reviewers read reviewed_sha]
-    pin --> verifier[Verifier: CI checks, or the full suite locally]
+    pin --> verifier[Verifier: ci-verdict.py on CI, or the full suite locally]
     lenses --> judge{Every lens PASS?}
     verifier --> judge
     verifier -.->|PR conflicts with its base| merge[Merge the base, never rebase] --> pin
@@ -108,8 +108,10 @@ renverse jamais un. Une commande de test qui a exécuté 0 test échoue.
 ## CI et pull requests
 
 Un dépôt doté d'une CI n'exécute jamais sa suite complète en local tant que la CI peut le faire. La run publie
-sa branch en PR brouillon (draft), et le verifier lit les checks CI du commit relu pendant que les autres
-reviewers lisent le code.
+sa branch en PR brouillon (draft). Le verifier est alors `scripts/ci-verdict.py`, pas un agent reviewer :
+il lit les checks CI du commit relu pendant que les reviewers lisent le code, et son verdict compte comme celui
+d'un reviewer. Si la CI ne donne aucun résultat exploitable, le verification reviewer lance la suite complète en
+local pour ce round.
 
 | `publish` | Quand | Pousse | À la fin |
 | --- | --- | --- | --- |
@@ -123,7 +125,7 @@ reviewers lisent le code.
 - Avant de lancer un round de revue, la run consulte la PR pendant 20 secondes au plus. Un conflit de merge, ou
   une CI déjà en échec pour le commit épinglé, est corrigé avant qu'un reviewer ne tourne ; une CI rouge compte
   quand même comme un round. Une CI encore en cours ne retient jamais le round : le verifier l'attend en même
-  temps que les autres reviewers.
+  temps que les reviewers.
 - En mode `pr`, avant de pousser chaque task après la première, la run consulte la CI du push précédent, qui a
   tourné pendant qu'elle écrivait la task, et corrige sur-le-champ un résultat rouge ou un conflit, pour ne pas
   y perdre un round de revue.
@@ -185,15 +187,15 @@ ordinaires sont en lecture seule et ne lancent jamais la suite complète.
 | `correctness-reviewer.md` | Logique, cas limites et aux bornes, chemins d'erreur | work | core |
 | `requirement-fidelity-reviewer.md` | Le requirement et la spec réalisés, sans rien de manquant, de dévié ou d'ajouté | work | core |
 | `doc-reviewer.md` | Les docs du dépôt que le changement a rendues fausses ; les modifications de docs gonflées | work | core |
-| `verification-reviewer.md` | Vérifications complètes au SHA relu, en local ou via la CI : commandes, codes de sortie, nombres de tests et d'échecs | work | core |
+| `verification-reviewer.md` | Vérifications complètes au SHA relu quand la vérification est locale : commandes, codes de sortie, nombres de tests et d'échecs | work | core |
 | `code-quality-reviewer.md` | Lisibilité, nommage, duplication, code mort, complexité, commentaires | work | optional : fichiers de code |
 | `test-reviewer.md` | Les tests vérifient la spec et couvrent le code nouveau ou modifié | work | optional : fichiers de code ou de test |
 | `performance-reviewer.md` | Complexité, N+1, allocations, fuites, points chauds | work | optional : fichiers de code |
 | `security-reviewer.md` | Autorisations, validation des entrées, secrets, injection, chaîne d'approvisionnement | both | optional : signaux d'authentification, d'entrée, de réseau, d'E/S, de dépendances ou de cryptographie |
 
-`scripts/select-panel.py` construit le panel de build à partir du frontmatter de chaque fichier
-(`lens`, `phase`, `tier`, `applies_to`) : une nouvelle lens, c'est un nouveau fichier. build lance toutes les
-lenses core et n'écarte une optional marginale qu'avec une raison consignée. `review` accepte aussi un dossier
+`scripts/select-panel.py` construit les panels de build et light-build à partir du frontmatter de chaque fichier
+(`lens`, `phase`, `tier`, `applies_to`) : une nouvelle lens, c'est un nouveau fichier. Les deux lancent toutes les
+lenses core et n'écartent une optional marginale qu'avec une raison consignée. `review` accepte aussi un dossier
 externe de reviewers rédigés selon `reviewer-contract.md` ; ils tournent comme agents génériques. Sur Claude Code,
 chaque reviewer tourne en tant que `updraft:<name>` avec le `model:` et l'`effort:` de son frontmatter ; sur
 Codex, il hérite du modèle de la session. Une lens relue repart de zéro avec ses éléments précédents et, en S6,

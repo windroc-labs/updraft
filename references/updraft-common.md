@@ -202,6 +202,11 @@ re-review set, doc fields and freeze line. Freeze and round lines go to the prog
 items to the review items. When every lens
 passes, advance. At the cap without a pass, take safety stop 2.
 
+The skill names a panel source per phase: a `select-panel.py` command, which returns a
+`selected` list of `{agent, subagent_type, file, tier, matched}`. The panel is every `core`
+agent, plus the `optional` agents you judge relevant; drop a marginal optional one only
+with a logged `decision(panel)` line naming it and why.
+
 ## S6 fixes
 
 Fix the code yourself, per review-round.md (The fix), and:
@@ -230,7 +235,7 @@ does every `gh` step and keeps the state beside the plan doc. Each call prints
   refused push in `ci` returns `publish=none` with the reason: log `decision(publish)` and
   verify locally from then on.
 - **Spec** (build). `pr.py spec --plan-doc <plan_doc> --spec-doc <spec doc>` at S4.
-- **Conflicts.** A `CONFLICT:` from the PR peek before a round, or from the verifier,
+- **Conflicts.** A `CONFLICT:` from the PR peek before a round, or from the CI lens,
   means the PR conflicts with its base, so CI will not run. With `<base>` from that line: `git -C <worktree> fetch origin <base>`,
   `git -C <worktree> merge origin/<base>` (never rebase), resolve, run targeted checks,
   commit. Set RESUME `base_ref` to `git -C <worktree> merge-base HEAD origin/<base>`, so

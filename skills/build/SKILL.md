@@ -71,7 +71,4 @@ Per common: Finish (S7). Then emit the result block.
 | Advance to | S4 | S7 |
 | Freeze line | `S3 panel: core=[…] +optional=[…] transport=Workflow` | `S6 panel: core=[…] +optional=[…] verification=<local\|ci> transport=Workflow` |
 
-- The selector returns a `selected` list of `{agent, subagent_type, file, tier, matched}`.
-- The panel is every `core` agent, plus the `optional` agents you judge relevant; drop a
-  marginal optional one only with a logged `decision(panel)` line naming it and why.
 - Change a cap only when the requirement says so, and only for this run.

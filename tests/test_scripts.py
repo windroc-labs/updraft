@@ -391,18 +391,15 @@ class LintRosterTests(unittest.TestCase):
             self.assertNotEqual(proc.returncode, 0, new)
             self.assertIn("work-only core", proc.stdout)
 
-    def test_verification_reviewer_has_ci_mode(self):
+    def test_verification_reviewer_runs_local_checks_only(self):
         with open(os.path.join(REPO, "agents", "verification-reviewer.md"),
                   encoding="utf-8") as fh:
             verifier = flat(fh.read())
-        for token in ("**CI mode.**", "`verification=ci`", "<ci_script>",
-                      "Exit 4 means checks are still running", "first NON-BLOCKING item",
-                      "return its verdict and run nothing else, with the re-review lines below on a re-review",
-                      "On exit 5 (the PR conflicts with its base) or 6 (CI missed its deadline), emit `VERDICT: FAIL` with the script's line as the only BLOCKING item, prefixed `VERIFICATION_UNAVAILABLE: ` on exit 6, and run nothing else",
-                      "--sha <reviewed_sha> --plan-doc <plan_doc>",
-                      "Run each check unpiped", "`set -o pipefail`",
+        for token in ("Run each check unpiped", "`set -o pipefail`",
                       "tests run and failed", "including a test command that ran 0 tests, goes in BLOCKING"):
             self.assertIn(token, verifier)
+        for gone in ("CI mode", "ci_script", "verification=ci", "ci-verdict"):
+            self.assertNotIn(gone, verifier)
 
     def test_verification_reviewer_runs_in_frozen_worktree_without_clone(self):
         with open(os.path.join(REPO, "agents", "verification-reviewer.md"),
@@ -705,7 +702,7 @@ class SkillContractTests(unittest.TestCase):
             "every lens passing means the phase converged: advance",
             "If HEAD moved, take safety stop 3",
             "never a local full-suite run",
-            "`CONFLICT:` means merge the base and re-run the round (Publish)",
+            "exit 5 means merge the base and re-run the round (Publish)",
             "`git -C <worktree> merge origin/<base>` (never rebase)",
             "Set RESUME `base_ref` to `git -C <worktree> merge-base HEAD origin/<base>`",
             "re-run the round like an interrupted one", "**Targeted checks.**", "safety stop 3 naming the conflicting files",
@@ -803,8 +800,6 @@ class SkillContractTests(unittest.TestCase):
         self.assertEqual(tracked, ["skills/build/spec.md"])
         self.assertIn("select-panel.py", text)
         self.assertIn("spec_file=", text)
-        self.assertIn("every core lens", flat(text))
-        self.assertIn("only with a logged `decision(panel)` line", flat(text))
         self.assertNotIn("## Preflight", text)
         self.assertNotIn("Load config", text)
 
@@ -813,9 +808,25 @@ class SkillContractTests(unittest.TestCase):
             text = fh.read()
         self.assertIn("data shape", text)
         self.assertIn("correctness after a verifier FAIL", flat(text))
-        for lens in ("correctness", "requirement-fidelity", "doc"):
-            self.assertIn(f"updraft:{lens}-reviewer", text, lens)
-        self.assertNotIn("select-panel", text)
+
+    def test_pipelines_select_the_s6_panel_by_one_rule(self):
+        rule = ("The panel is every `core` agent, plus the `optional` agents you judge relevant;"
+                " drop a marginal optional one only with a logged `decision(panel)` line"
+                " naming it and why.")
+        with open(os.path.join(REPO, "references", "updraft-common.md"), encoding="utf-8") as fh:
+            self.assertEqual(flat(fh.read()).count(rule), 1)
+        for skill in ("build", "light-build"):
+            with self.subTest(skill=skill):
+                with open(os.path.join(SKILLS, skill, "SKILL.md"), encoding="utf-8") as fh:
+                    own = fh.read().replace("\\|", "|")  # build's table escapes `|`
+                self.assertIn("`python3 ../../scripts/select-panel.py --phase work"
+                              " --worktree <worktree> --base <base_ref>`", own)
+                self.assertIn("`S6 panel: core=[…] +optional=[…] verification=<local|ci>"
+                              " transport=Workflow`", own)
+                self.assertNotIn("decision(panel)", own)
+                self.assertNotIn("pinned", own)
+                self.assertNotIn("Add no optional lens", own)
+                self.assertNotIn("correctness + requirement-fidelity + doc + verification", own)
 
     def test_retired_shapes_stay_gone(self):
         for skill in self.SKILL_STEPS:
@@ -1980,7 +1991,7 @@ class StandaloneSkillTests(unittest.TestCase):
         for token in ("--wait 20 --appear 20 --interval 5", "It never waits for CI to finish",
                       "Exit 5 (`CONFLICT:`): resolve it (Publish)", "Exit 1, CI already failed: dispatch no one",
                       "Exit 6: safety stop 3", "Any other exit, CI still running included: go on",
-                      "with `verification=ci` the verifier waits for CI alongside the other lenses",
+                      "with `verification=ci` the CI lens waits for CI alongside the reviewers (step 5)",
                       "one that has not reviewed yet is pending, not FAIL",
                       "a dispatched lens with a missing or unparseable verdict is FAIL",
                       "`verification=FAIL (CI check; panel not dispatched)`",
@@ -1988,7 +1999,7 @@ class StandaloneSkillTests(unittest.TestCase):
             with self.subTest(token=token):
                 self.assertIn(token, rounds)
         common = flat(self.read("references", "updraft-common.md"))
-        self.assertIn("A `CONFLICT:` from the PR peek before a round, or from the verifier", common)
+        self.assertIn("A `CONFLICT:` from the PR peek before a round, or from the CI lens", common)
         self.assertIn("`Rules: <abs SKILL.md path> <abs path of this file> <abs path of review-round.md>`", common)
         self.assertIn("the decisions and `omitted` lines", common)
 
@@ -2006,6 +2017,26 @@ class StandaloneSkillTests(unittest.TestCase):
             with self.subTest(token=token):
                 self.assertIn(token, produce)
         self.assertIn("Re-read the plan doc whole (Resume first), the files on its `Rules:` line", flat(common))
+
+    def test_ci_verification_is_the_script_not_an_agent(self):
+        rounds = flat(self.read("references", "review-round.md"))
+        dispatch = rounds[rounds.index("**Dispatch all members together**"):
+                          rounds.index("**Wait for every verdict.**")]
+        for token in ("With `verification=ci`, the `verification` lens is",
+                      "`python3 <abs path of ../scripts/ci-verdict.py> --worktree <worktree> --sha <reviewed_sha> --plan-doc <plan_doc>`",
+                      "not an agent", "never dispatch `updraft:verification-reviewer`",
+                      "only on exit 3 or another unexpected exit"):
+            with self.subTest(token=token):
+                self.assertIn(token, rounds)
+        for token in ("while they work", "Exit 0 or 1: its stdout is the `verification` verdict",
+                      "Exit 4: run it again",
+                      "Exit 3 (`NO_CI:`), or any other exit: dispatch `updraft:verification-reviewer`",
+                      "Exit 5 (`CONFLICT:`) or 6 (`TIMEOUT:`): touch nothing until every verdict is back (step 6)",
+                      "exit 5 means merge the base and re-run the round (Publish), and exit 6 means safety stop 3"):
+            with self.subTest(token=token):
+                self.assertIn(token, dispatch)
+        self.assertNotIn("ci_script", rounds)
+        self.assertIn("Only the reviewers' and the CI script's own verdicts decide", rounds)
 
     def test_pipeline_skills_read_the_round_rules(self):
         for skill in ("build", "light-build"):

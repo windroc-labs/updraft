@@ -2,8 +2,7 @@
 name: verification-reviewer
 description: >-
   Work-phase verification reviewer. Runs the complete target-repo checks in the frozen
-  source worktree at a fixed revision, or when the run publishes reads the CI checks the
-  plan doc names for it, and returns exact evidence.
+  source worktree at a fixed revision and returns exact evidence.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 effort: high
@@ -23,8 +22,7 @@ refs, and you verify the same fixed revision the other reviewers inspect.
 ## Contract
 
 - **Inputs by reference.** You get the source **worktree path**, the exact
-  **reviewed_sha**, **base_ref**, the run's **plan_doc** path, and `verification=local`
-  or `verification=ci` (with a `ci_script` path).
+  **reviewed_sha**, **base_ref** and the run's **plan_doc** path.
 - **Frozen worktree.** Before the checks, confirm `git -C <worktree> rev-parse HEAD`
   equals `reviewed_sha` and `git -C <worktree> status --porcelain` is empty. If not, emit
   `VERDICT: FAIL` with a BLOCKING `VERIFICATION_UNAVAILABLE:` item naming the difference,
@@ -32,15 +30,6 @@ refs, and you verify the same fixed revision the other reviewers inspect.
   checkout, and never `rm` a path read from a file or command substitution. After the
   checks, rerun both commands: a changed HEAD or non-empty status is a BLOCKING item (the
   checks leak state) listing the new HEAD or paths. Never clean up leaked files.
-- **CI mode.** With `verification=ci`, after the frozen-worktree check, run
-  `python3 <ci_script> --worktree <worktree> --sha <reviewed_sha> --plan-doc <plan_doc>`
-  (PASS needs the plan doc's `CI checks:` green) with a 10-minute tool
-  timeout (Bash `timeout: 600000`). Exit 4 means checks are still running: run it again.
-  On exit 0 or 1, return its verdict and run nothing else, with the re-review lines below
-  on a re-review. On exit 5 (the PR conflicts with its base) or 6 (CI missed its deadline),
-  emit `VERDICT: FAIL` with the script's line as the only BLOCKING item, prefixed
-  `VERIFICATION_UNAVAILABLE: ` on exit 6, and run nothing else. Any other exit means CI gave no usable result: run the complete checks below
-  instead, and make the script's message your first NON-BLOCKING item.
 - **Complete checks.** Run the documented verification command from the plan doc, plus
   any checks the repo's `AGENTS.md` / `CLAUDE.md`, README or CI require. With no documented command,
   derive the full checks from the build and test manifests. Never weaken, skip or replace

@@ -46,7 +46,7 @@ commit 하나씩, 최종 보고서, 그리고 병합 없음. 자기 완결적인
 | --- | --- | --- |
 | 단계 | S1–S7 | S1, S4–S7 |
 | Spec | 작성(S2), 리뷰(S3) | requirement가 곧 spec |
-| S6 panel | 모든 core lens, 그리고 변경에 해당하는 optional lens | 고정: correctness, requirement-fidelity, doc, verification |
+| S6 panel | 모든 core lens, 그리고 변경에 해당하는 optional lens | build와 같음 |
 | S6 re-review | 실패한 lens, 그리고 모든 core lens | 실패한 lens, verifier, verifier FAIL 후에는 correctness도 |
 | 상한 | 리뷰 단계마다 3라운드, requirement에서 변경 가능 | 3라운드 |
 | 적합한 작업 | 복잡한 작업 | 단순한 작업, 또는 spec의 엄격함 없이 자율적으로 진행하고 싶을 때 |
@@ -89,7 +89,7 @@ flowchart LR
 ```mermaid
 flowchart TD
     pin[Pin HEAD as reviewed_sha, push it when publishing] --> lenses[Reviewers read reviewed_sha]
-    pin --> verifier[Verifier: CI checks, or the full suite locally]
+    pin --> verifier[Verifier: ci-verdict.py on CI, or the full suite locally]
     lenses --> judge{Every lens PASS?}
     verifier --> judge
     verifier -.->|PR conflicts with its base| merge[Merge the base, never rebase] --> pin
@@ -105,7 +105,8 @@ flowchart TD
 ## CI와 pull request
 
 CI가 있는 저장소는 CI가 실행할 수 있는 한 전체 테스트 스위트를 로컬에서 돌리지 않습니다. run은 branch를 draft PR로 게시하고,
-verifier는 리뷰 대상 commit의 CI 검사를 읽으며, 다른 reviewer는 코드를 읽습니다.
+verifier는 reviewer agent가 아니라 `scripts/ci-verdict.py`가 됩니다. 리뷰 대상 commit의 CI 검사를 읽으며, reviewer는 코드를 읽습니다.
+그 verdict는 reviewer의 verdict처럼 셉니다. CI가 쓸 만한 결과를 주지 않으면 그 라운드는 verification reviewer가 로컬에서 전체 스위트를 돌립니다.
 
 | `publish` | 조건 | push 대상 | 종료 시 |
 | --- | --- | --- | --- |
@@ -118,7 +119,7 @@ verifier는 리뷰 대상 commit의 CI 검사를 읽으며, 다른 reviewer는 �
 - S4는 테스트를 실행하는 CI 검사를 명시합니다. 그런 검사가 없으면 verification은 로컬에서 실행됩니다.
 - 리뷰 라운드를 보내기 전에 run은 PR을 최대 20초 동안 확인합니다. 병합 충돌이나 고정된 commit의 CI가 이미 실패한 경우는
   reviewer가 실행되기 전에 고칩니다. 빨간 CI도 한 라운드로 셉니다. 아직 실행 중인 CI가 라운드를 붙잡지는 않습니다:
-  verifier가 다른 reviewer와 함께 기다립니다.
+  verifier가 reviewer와 함께 기다립니다.
 - `pr` 모드에서는 첫 task 이후 각 task를 push하기 전에, run이 직전 push의 CI(task를 쓰는 동안 돌던 것)를 확인하고
   빨간 결과나 충돌을 그 자리에서 고칩니다. 그래서 리뷰 라운드를 쓰지 않습니다.
 - CI 실패는 다른 blocker처럼 수정 루프에 들어갑니다.
@@ -171,14 +172,14 @@ verify 명령, `RESUME:` 줄, 진행 로그, 리뷰 항목, 코드베이스 사�
 | `correctness-reviewer.md` | 로직, 엣지 케이스와 경계 조건, 오류 경로 | work | core |
 | `requirement-fidelity-reviewer.md` | requirement와 spec이 구현되었고 빠지거나, 벗어나거나, 더해진 것이 없음 | work | core |
 | `doc-reviewer.md` | 변경 때문에 사실과 달라진 저장소 내 문서. 비대해진 문서 수정 | work | core |
-| `verification-reviewer.md` | 리뷰 대상 SHA에서의 전체 검사(로컬 또는 CI): 명령, 종료 코드, 테스트 수와 실패 수 | work | core |
+| `verification-reviewer.md` | verification이 로컬일 때 리뷰 대상 SHA에서의 전체 검사: 명령, 종료 코드, 테스트 수와 실패 수 | work | core |
 | `code-quality-reviewer.md` | 가독성, 이름, 중복, 죽은 코드, 복잡도, 주석 | work | optional: 코드 파일 |
 | `test-reviewer.md` | 테스트가 spec을 검증하고 새로 추가되거나 바뀐 코드를 다룸 | work | optional: 코드 또는 테스트 파일 |
 | `performance-reviewer.md` | 복잡도, N+1, 메모리 할당, 누수, 핫스팟 | work | optional: 코드 파일 |
 | `security-reviewer.md` | 인가, 입력 검증, 시크릿, 인젝션, 공급망 | both | optional: 인증, 입력, 네트워크, I/O, 의존성 또는 암호화 신호 |
 
-`scripts/select-panel.py`는 각 파일의 frontmatter(`lens`, `phase`, `tier`, `applies_to`)로 build의 panel을 구성하므로,
-새 lens는 새 파일 하나입니다. build는 모든 core lens를 실행하고, 별 효과 없는 optional lens는 이유를 기록할 때만 뺍니다.
+`scripts/select-panel.py`는 각 파일의 frontmatter(`lens`, `phase`, `tier`, `applies_to`)로 build와 light-build의 panel을 구성하므로,
+새 lens는 새 파일 하나입니다. 둘 다 모든 core lens를 실행하고, 별 효과 없는 optional lens는 이유를 기록할 때만 뺍니다.
 `review`는 `reviewer-contract.md`에 맞춰 작성된 외부 reviewer 폴더도 받으며, 이들은 범용 agent로 실행됩니다. Claude Code에서는
 각 reviewer가 frontmatter의 `model:`과 `effort:`로 `updraft:<name>`으로 실행되고, Codex에서는 세션의 모델을 그대로 씁니다.
 re-review되는 lens는 이전 리뷰 항목과 (S6에서는) 수정 diff를 가지고 새로 시작합니다.

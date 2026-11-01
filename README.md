@@ -48,7 +48,7 @@ commits, and the same PR.
 | --- | --- | --- |
 | Steps | S1–S7 | S1, S4–S7 |
 | Spec | written (S2), reviewed (S3) | the requirement is the spec |
-| S6 panel | every core lens, plus the optional lenses the change matches | pinned: correctness, requirement-fidelity, doc, verification |
+| S6 panel | every core lens, plus the optional lenses the change matches | same as build |
 | S6 re-review | failed lenses, plus every core lens | failed lenses, plus the verifier, plus correctness after a verifier FAIL |
 | Cap | 3 rounds per review phase, changeable in the requirement | 3 rounds |
 | Fits | complex work | simple tasks, or autonomy without spec rigor |
@@ -92,7 +92,7 @@ flowchart LR
 ```mermaid
 flowchart TD
     pin[Pin HEAD as reviewed_sha, push it when publishing] --> lenses[Reviewers read reviewed_sha]
-    pin --> verifier[Verifier: CI checks, or the full suite locally]
+    pin --> verifier[Verifier: ci-verdict.py on CI, or the full suite locally]
     lenses --> judge{Every lens PASS?}
     verifier --> judge
     verifier -.->|PR conflicts with its base| merge[Merge the base, never rebase] --> pin
@@ -108,8 +108,10 @@ orchestrator never overrides one. A test command that ran 0 tests fails.
 ## CI and pull requests
 
 A repo with CI never runs its full suite locally while CI can run it. The run publishes
-its branch as a draft PR, and the verifier reads the CI checks for the reviewed commit
-while the other reviewers read the code.
+its branch as a draft PR. The verifier is then `scripts/ci-verdict.py`, not a reviewer agent:
+it reads the CI checks for the reviewed commit while the reviewers read the code, and its
+verdict counts like a reviewer's. If CI gives no usable result, the verification reviewer
+runs the full suite locally that round.
 
 | `publish` | When | Pushes | At the end |
 | --- | --- | --- | --- |
@@ -123,7 +125,7 @@ while the other reviewers read the code.
 - Before dispatching a review round, the run peeks at the PR for up to 20 seconds. A
   merge conflict, or CI that already failed for the pinned commit, is fixed before any
   reviewer runs; a red CI still counts as a round. CI still running never holds the round
-  up: the verifier waits for it alongside the other reviewers.
+  up: the verifier waits for it alongside the reviewers.
 - In `pr` mode, before pushing each task after the first, the run peeks at the previous
   push's CI, which ran while it wrote the task, and fixes a red result or a conflict
   right then, so it doesn't cost a review round.
@@ -188,15 +190,15 @@ reviewers are read-only and never run the full suite.
 | `correctness-reviewer.md` | Logic, edge and boundary cases, error paths | work | core |
 | `requirement-fidelity-reviewer.md` | The requirement and spec built, nothing missing, drifted or added | work | core |
 | `doc-reviewer.md` | Docs anywhere in the repo the change made false; bloated doc edits | work | core |
-| `verification-reviewer.md` | Full checks at the reviewed SHA, locally or from CI: commands, exit codes, test and failure counts | work | core |
+| `verification-reviewer.md` | Full checks at the reviewed SHA when verification runs locally: commands, exit codes, test and failure counts | work | core |
 | `code-quality-reviewer.md` | Readability, naming, duplication, dead code, complexity, comments | work | optional: code files |
 | `test-reviewer.md` | Tests assert the spec and cover new or changed code | work | optional: code or test files |
 | `performance-reviewer.md` | Complexity, N+1, allocation, leaks, hotspots | work | optional: code files |
 | `security-reviewer.md` | Authz, input validation, secrets, injection, supply chain | both | optional: auth, input, network, I/O, dependency or crypto signals |
 
-`scripts/select-panel.py` builds build's panel from each file's frontmatter
-(`lens`, `phase`, `tier`, `applies_to`), so a new lens is a new file. build runs every core
-lens and drops a marginal optional one only with a logged reason. `review` also takes an
+`scripts/select-panel.py` builds the build and light-build panels from each file's frontmatter
+(`lens`, `phase`, `tier`, `applies_to`), so a new lens is a new file. Both run every core
+lens and drop a marginal optional one only with a logged reason. `review` also takes an
 outside folder of reviewers written to `reviewer-contract.md`; they run as generic agents. On Claude Code each
 reviewer runs as `updraft:<name>` with its frontmatter `model:` and `effort:`; on Codex
 it inherits the session model. A re-reviewed lens starts fresh with its prior items and,

@@ -89,7 +89,7 @@ flowchart LR
 ```mermaid
 flowchart TD
     pin[Pin HEAD as reviewed_sha, push it when publishing] --> lenses[Reviewers read reviewed_sha]
-    pin --> verifier[Verifier: CI checks, or the full suite locally]
+    pin --> verifier[Verifier: ci-verdict.py on CI, or the full suite locally]
     lenses --> judge{Every lens PASS?}
     verifier --> judge
     verifier -.->|PR conflicts with its base| merge[Merge the base, never rebase] --> pin
@@ -105,7 +105,8 @@ verdict だけで、厳密な `VERDICT / BLOCKING / NON-BLOCKING` の文法に�
 ## CI と pull request
 
 CI のあるリポジトリでは、CI で実行できる限りフルスイートをローカルで実行しません。run は branch を draft PR として公開し、
-verifier はレビュー対象の commit の CI チェックを読み、他の reviewer はコードを読みます。
+verifier は reviewer agent ではなく `scripts/ci-verdict.py` になります。レビュー対象の commit の CI チェックを読み、reviewer はコードを読みます。
+その verdict は reviewer の verdict と同じく数えます。CI が使える結果を返さなければ、そのラウンドは verification reviewer がローカルでフルスイートを実行します。
 
 | `publish` | 条件 | push するもの | 終了時 |
 | --- | --- | --- | --- |
@@ -118,7 +119,7 @@ verifier はレビュー対象の commit の CI チェックを読み、他の r
 - S4 はテストを実行する CI チェックを明記します。該当するものがなければ、verification はローカルで実行されます。
 - レビューラウンドを開始する前に、run は最大 20 秒 PR を確認します。マージコンフリクトや、固定した commit の CI が
   すでに失敗している場合は、reviewer が動く前に修正します。赤い CI もラウンドとして数えます。実行中の CI がラウンドを
-  止めることはありません: verifier が他の reviewer と並行して待ちます。
+  止めることはありません: verifier が reviewer と並行して待ちます。
 - `pr` モードでは、2 つ目以降の task を push する前に、run は直前の push の CI（task を書いている間に走っていたもの）を確認し、
   赤い結果やコンフリクトをその場で修正します。こうしてレビューラウンドを無駄にしません。
 - CI の失敗は他の blocker と同じく修正ループに入ります。
@@ -173,7 +174,7 @@ run はこれと `git log` から復元します。同じ requirement をもう�
 | `correctness-reviewer.md` | ロジック、エッジケースと境界条件、エラーパス | work | core |
 | `requirement-fidelity-reviewer.md` | requirement と spec が実装され、欠落・逸脱・追加がない | work | core |
 | `doc-reviewer.md` | 変更によって事実と合わなくなったリポジトリ内のドキュメント。肥大化したドキュメント編集 | work | core |
-| `verification-reviewer.md` | レビュー対象の SHA でのフルチェック（ローカルまたは CI）: コマンド、終了コード、テスト数と失敗数 | work | core |
+| `verification-reviewer.md` | verification がローカルのとき、レビュー対象の SHA でのフルチェック: コマンド、終了コード、テスト数と失敗数 | work | core |
 | `code-quality-reviewer.md` | 可読性、命名、重複、デッドコード、複雑さ、コメント | work | optional: コードファイル |
 | `test-reviewer.md` | テストが spec をアサートし、新規・変更コードをカバーしている | work | optional: コードまたはテストファイル |
 | `performance-reviewer.md` | 計算量、N+1、メモリ確保、リーク、ホットスポット | work | optional: コードファイル |

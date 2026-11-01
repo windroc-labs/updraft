@@ -92,7 +92,7 @@ flowchart LR
 ```mermaid
 flowchart TD
     pin[Pin HEAD as reviewed_sha, push it when publishing] --> lenses[Reviewers read reviewed_sha]
-    pin --> verifier[Verifier: CI checks, or the full suite locally]
+    pin --> verifier[Verifier: ci-verdict.py on CI, or the full suite locally]
     lenses --> judge{Every lens PASS?}
     verifier --> judge
     verifier -.->|PR conflicts with its base| merge[Merge the base, never rebase] --> pin
@@ -108,8 +108,10 @@ orchestrator never overrides one. A test command that ran 0 tests fails.
 ## CI and pull requests
 
 A repo with CI never runs its full suite locally while CI can run it. The run publishes
-its branch as a draft PR, and the verifier reads the CI checks for the reviewed commit
-while the other reviewers read the code.
+its branch as a draft PR. The verifier is then `scripts/ci-verdict.py`, not a reviewer agent:
+it reads the CI checks for the reviewed commit while the reviewers read the code, and its
+verdict counts like a reviewer's. If CI gives no usable result, the verification reviewer
+runs the full suite locally that round.
 
 | `publish` | When | Pushes | At the end |
 | --- | --- | --- | --- |
@@ -123,7 +125,7 @@ while the other reviewers read the code.
 - Before dispatching a review round, the run peeks at the PR for up to 20 seconds. A
   merge conflict, or CI that already failed for the pinned commit, is fixed before any
   reviewer runs; a red CI still counts as a round. CI still running never holds the round
-  up: the verifier waits for it alongside the other reviewers.
+  up: the verifier waits for it alongside the reviewers.
 - In `pr` mode, before pushing each task after the first, the run peeks at the previous
   push's CI, which ran while it wrote the task, and fixes a red result or a conflict
   right then, so it doesn't cost a review round.
@@ -188,7 +190,7 @@ reviewers are read-only and never run the full suite.
 | `correctness-reviewer.md` | Logic, edge and boundary cases, error paths | work | core |
 | `requirement-fidelity-reviewer.md` | The requirement and spec built, nothing missing, drifted or added | work | core |
 | `doc-reviewer.md` | Docs anywhere in the repo the change made false; bloated doc edits | work | core |
-| `verification-reviewer.md` | Full checks at the reviewed SHA, locally or from CI: commands, exit codes, test and failure counts | work | core |
+| `verification-reviewer.md` | Full checks at the reviewed SHA when verification runs locally: commands, exit codes, test and failure counts | work | core |
 | `code-quality-reviewer.md` | Readability, naming, duplication, dead code, complexity, comments | work | optional: code files |
 | `test-reviewer.md` | Tests assert the spec and cover new or changed code | work | optional: code or test files |
 | `performance-reviewer.md` | Complexity, N+1, allocation, leaks, hotspots | work | optional: code files |

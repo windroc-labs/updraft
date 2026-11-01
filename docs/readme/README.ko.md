@@ -89,7 +89,7 @@ flowchart LR
 ```mermaid
 flowchart TD
     pin[Pin HEAD as reviewed_sha, push it when publishing] --> lenses[Reviewers read reviewed_sha]
-    pin --> verifier[Verifier: CI checks, or the full suite locally]
+    pin --> verifier[Verifier: ci-verdict.py on CI, or the full suite locally]
     lenses --> judge{Every lens PASS?}
     verifier --> judge
     verifier -.->|PR conflicts with its base| merge[Merge the base, never rebase] --> pin
@@ -105,7 +105,8 @@ flowchart TD
 ## CI와 pull request
 
 CI가 있는 저장소는 CI가 실행할 수 있는 한 전체 테스트 스위트를 로컬에서 돌리지 않습니다. run은 branch를 draft PR로 게시하고,
-verifier는 리뷰 대상 commit의 CI 검사를 읽으며, 다른 reviewer는 코드를 읽습니다.
+verifier는 reviewer agent가 아니라 `scripts/ci-verdict.py`가 됩니다. 리뷰 대상 commit의 CI 검사를 읽으며, reviewer는 코드를 읽습니다.
+그 verdict는 reviewer의 verdict처럼 셉니다. CI가 쓸 만한 결과를 주지 않으면 그 라운드는 verification reviewer가 로컬에서 전체 스위트를 돌립니다.
 
 | `publish` | 조건 | push 대상 | 종료 시 |
 | --- | --- | --- | --- |
@@ -118,7 +119,7 @@ verifier는 리뷰 대상 commit의 CI 검사를 읽으며, 다른 reviewer는 �
 - S4는 테스트를 실행하는 CI 검사를 명시합니다. 그런 검사가 없으면 verification은 로컬에서 실행됩니다.
 - 리뷰 라운드를 보내기 전에 run은 PR을 최대 20초 동안 확인합니다. 병합 충돌이나 고정된 commit의 CI가 이미 실패한 경우는
   reviewer가 실행되기 전에 고칩니다. 빨간 CI도 한 라운드로 셉니다. 아직 실행 중인 CI가 라운드를 붙잡지는 않습니다:
-  verifier가 다른 reviewer와 함께 기다립니다.
+  verifier가 reviewer와 함께 기다립니다.
 - `pr` 모드에서는 첫 task 이후 각 task를 push하기 전에, run이 직전 push의 CI(task를 쓰는 동안 돌던 것)를 확인하고
   빨간 결과나 충돌을 그 자리에서 고칩니다. 그래서 리뷰 라운드를 쓰지 않습니다.
 - CI 실패는 다른 blocker처럼 수정 루프에 들어갑니다.
@@ -171,7 +172,7 @@ verify 명령, `RESUME:` 줄, 진행 로그, 리뷰 항목, 코드베이스 사�
 | `correctness-reviewer.md` | 로직, 엣지 케이스와 경계 조건, 오류 경로 | work | core |
 | `requirement-fidelity-reviewer.md` | requirement와 spec이 구현되었고 빠지거나, 벗어나거나, 더해진 것이 없음 | work | core |
 | `doc-reviewer.md` | 변경 때문에 사실과 달라진 저장소 내 문서. 비대해진 문서 수정 | work | core |
-| `verification-reviewer.md` | 리뷰 대상 SHA에서의 전체 검사(로컬 또는 CI): 명령, 종료 코드, 테스트 수와 실패 수 | work | core |
+| `verification-reviewer.md` | verification이 로컬일 때 리뷰 대상 SHA에서의 전체 검사: 명령, 종료 코드, 테스트 수와 실패 수 | work | core |
 | `code-quality-reviewer.md` | 가독성, 이름, 중복, 죽은 코드, 복잡도, 주석 | work | optional: 코드 파일 |
 | `test-reviewer.md` | 테스트가 spec을 검증하고 새로 추가되거나 바뀐 코드를 다룸 | work | optional: 코드 또는 테스트 파일 |
 | `performance-reviewer.md` | 복잡도, N+1, 메모리 할당, 누수, 핫스팟 | work | optional: 코드 파일 |

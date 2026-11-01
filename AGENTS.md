@@ -59,8 +59,9 @@ and review settings. Understanding the system means reading those four files plu
   publishing (S1 `publish`, all `gh` steps in `scripts/pr.py`): `pr` when the
   requirement asks for a PR (each commit pushed as it lands, build posts the reviewed spec,
   ready on convergence), `ci` when the repo has a pull_request workflow (pushed at S6 pins,
-  a draft during the run). Either way the repo's CI is the verifier's backend, read by
-  `scripts/ci-verdict.py`; a full suite never runs locally while CI can run it.
+  a draft during the run). Either way the repo's CI verifies: the orchestrator runs
+  `scripts/ci-verdict.py` beside the reviewers in each round and counts its verdict as the
+  verification lens's; a full suite never runs locally while CI can run it.
   Each publishing work round peeks at the PR before dispatching the panel, so a conflict
   or an already-red CI is fixed before any reviewer runs; running CI never delays the
   panel. In `pr` mode S5 also peeks at the previous push's CI before each task push.
@@ -75,9 +76,9 @@ and review settings. Understanding the system means reading those four files plu
 
 - **Named review roster (`agents/`).** Each reviewer has a single lens. Ordinary reviewers
   are read-only and never run the full test suite; the core work-phase verification
-  reviewer runs the complete checks in the frozen source worktree at the reviewed SHA, or
-  when publishing reads the CI checks the plan doc names as running the tests for that
-  SHA and falls back to local checks. Each
+  reviewer runs the complete checks in the frozen source worktree at the reviewed SHA when
+  verification is local; when publishing, `scripts/ci-verdict.py` reads the CI checks the
+  plan doc names in its place, and the reviewer runs only when CI gives no usable result. Each
   agent has **self-describing** frontmatter (`lens` / `phase` / `tier` /
   `applies_to`) so the selector can route it with no code change. `reviewer-contract.md`
   is an authoring-time template (selector-inert: no `phase`) copied verbatim into ordinary reviewers (a test enforces it);

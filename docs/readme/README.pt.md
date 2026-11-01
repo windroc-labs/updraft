@@ -90,7 +90,7 @@ flowchart LR
 ```mermaid
 flowchart TD
     pin[Pin HEAD as reviewed_sha, push it when publishing] --> lenses[Reviewers read reviewed_sha]
-    pin --> verifier[Verifier: CI checks, or the full suite locally]
+    pin --> verifier[Verifier: ci-verdict.py on CI, or the full suite locally]
     lenses --> judge{Every lens PASS?}
     verifier --> judge
     verifier -.->|PR conflicts with its base| merge[Merge the base, never rebase] --> pin
@@ -106,8 +106,9 @@ Um comando de teste que rodou 0 testes falha.
 ## CI e pull requests
 
 Um repositório com CI nunca roda a suíte completa localmente enquanto a CI puder rodá-la. A run publica a branch
-como um PR em rascunho (draft), e o verifier lê os checks de CI do commit revisado enquanto os outros reviewers
-leem o código.
+como um PR em rascunho (draft). O verifier passa a ser `scripts/ci-verdict.py`, não um agente reviewer: ele lê
+os checks de CI do commit revisado enquanto os reviewers leem o código, e seu veredito conta como o de um reviewer.
+Se a CI não der um resultado utilizável, o verification reviewer roda a suíte completa localmente nessa rodada.
 
 | `publish` | Quando | Faz push de | No final |
 | --- | --- | --- | --- |
@@ -120,7 +121,7 @@ leem o código.
 - O S4 nomeia os checks de CI que rodam os testes. Se nenhum rodar, a verificação é feita localmente.
 - Antes de disparar uma rodada de revisão, a run consulta o PR por até 20 segundos. Um conflito de merge, ou uma
   CI que já falhou para o commit fixado, é corrigido antes de qualquer reviewer rodar; uma CI vermelha ainda conta
-  como rodada. CI ainda em execução nunca segura a rodada: o verifier espera por ela junto com os outros reviewers.
+  como rodada. CI ainda em execução nunca segura a rodada: o verifier espera por ela junto com os reviewers.
 - No modo `pr`, antes de fazer push de cada task depois da primeira, a run consulta a CI do push anterior, que
   rodou enquanto ela escrevia a task, e corrige na hora um resultado vermelho ou um conflito, para não gastar uma
   rodada de revisão.
@@ -181,7 +182,7 @@ somente leitura e nunca rodam a suíte completa.
 | `correctness-reviewer.md` | Lógica, casos extremos e de limite, caminhos de erro | work | core |
 | `requirement-fidelity-reviewer.md` | O requirement e a spec construídos, sem nada faltando, desviado ou a mais | work | core |
 | `doc-reviewer.md` | Documentação em qualquer lugar do repositório que a mudança tornou falsa; edições de documentação inchadas | work | core |
-| `verification-reviewer.md` | Verificações completas no SHA revisado, localmente ou pela CI: comandos, códigos de saída, contagens de testes e falhas | work | core |
+| `verification-reviewer.md` | Verificações completas no SHA revisado quando a verificação é local: comandos, códigos de saída, contagens de testes e falhas | work | core |
 | `code-quality-reviewer.md` | Legibilidade, nomes, duplicação, código morto, complexidade, comentários | work | optional: arquivos de código |
 | `test-reviewer.md` | Os testes verificam a spec e cobrem o código novo ou alterado | work | optional: arquivos de código ou de teste |
 | `performance-reviewer.md` | Complexidade, N+1, alocação, vazamentos, pontos críticos | work | optional: arquivos de código |

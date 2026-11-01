@@ -35,10 +35,14 @@ The blocker gists prime re-reviews; the full items are in the items.
 
 ## Round
 
-**Verifier (work).** Every work panel includes `updraft:verification-reviewer`. Freeze
-its backend in `r1`: `verification=ci` when `pr.py` reports `publish` other than `none`
-and the plan doc's `CI checks:` names a check, else `verification=local`. It runs every
-round.
+**Verifier (work).** Every work panel includes the `verification` lens. Freeze its
+backend in `r1`: `verification=ci` when `pr.py` reports `publish` other than `none` and
+the plan doc's `CI checks:` names a check, else `verification=local`. It runs every round.
+With `verification=local`, the lens is the `updraft:verification-reviewer` agent, which
+runs the complete checks. With `verification=ci`, the `verification` lens is
+`python3 <abs path of ../scripts/ci-verdict.py> --worktree <worktree> --sha <reviewed_sha> --plan-doc <plan_doc>`,
+which you run in step 5, not an agent: never dispatch `updraft:verification-reviewer`
+then, except as the fallback, only on exit 3 (step 5).
 
 Run each round in these steps:
 
@@ -54,12 +58,10 @@ Run each round in these steps:
    `verification=FAIL` with the printed items as its blockers, so go to step 9; every
    other lens keeps its state from earlier rounds, and one that has not reviewed yet is
    pending, not FAIL. Exit 6: safety stop 3. Any other exit, CI still running included:
-   go on; with `verification=ci` the verifier waits for CI alongside the other lenses.
+   go on; with `verification=ci` the CI lens waits for CI alongside the reviewers (step 5).
 4. **Write prompts.** Each member gets only its run-input prompt:
    `PHASE=<spec|work>. Inputs: worktree=…, base_ref=…, <doc fields>, requirement=…, focus=…, reviewed_sha=<HEAD> (work only). Output ONLY the verdict, no extra prose.`
    With no repo, leave out `worktree=` and `base_ref=`.
-   The verifier's prompt adds `verification=<local|ci>` and, with `ci`,
-   `ci_script=<abs path of ../scripts/ci-verdict.py>`.
    `focus=` names only what the requirement, spec or a logged decision asks the lens to
    weigh. It never claims the work is correct and never narrows the lens's checklist.
    A re-reviewed lens also gets its prior items as `<lens>#<n> "<gist>"`. In the work
@@ -76,19 +78,29 @@ Run each round in these steps:
    - **Native fallback:** if `Workflow` is unavailable or the call fails, dispatch the same
      members fresh as one parallel subagent batch (`Task`) with the same prompts. Stay on
      the fallback for the rest of the phase and note it in the freeze line.
+   - **CI lens (`verification=ci`):** run the CI lens command while they work: in the
+     same parallel batch as the dispatch call, or right after it when that call returns
+     at once (Claude's `Workflow` does). Run it unpiped with its stdout to a file and a
+     10-minute tool timeout (Bash `timeout: 600000`). Never hold the members back for it,
+     nor it for them.
+     Exit 0 or 1: its stdout is the `verification` verdict, in the strict grammar.
+     Exit 4: run it again. Exit 3 (`NO_CI:`): dispatch `updraft:verification-reviewer`
+     now as a fresh subagent (`Task`) with its prompt; its verdict is the `verification`
+     verdict, and the round line notes the `NO_CI:` reason. Exit 5 (`CONFLICT:`): merge
+     the base and re-run the round (Publish). Exit 6 (`TIMEOUT:`): safety stop 3.
 6. **Wait for every verdict.** Never poll or judge early. A status message is not a verdict.
 7. **Recheck the revision (work).** HEAD still equals `reviewed_sha` and status is still
    empty. If the only dirty paths are ones the verifier reports as leaked, judge normally;
    the fix removes them. If HEAD moved, take safety stop 3 and list the new commits.
-8. **Check the verifier (work).** Read its raw BLOCKING items before adding item IDs.
-   `VERIFICATION_UNAVAILABLE:` (after its one retry) triggers safety stop 3. `CONFLICT:`
-   means merge the base and re-run the round (Publish).
+8. **Check the verifier agent (work).** Read its raw BLOCKING items before adding item
+   IDs. `VERIFICATION_UNAVAILABLE:` (after its one retry) triggers safety stop 3.
 9. **Label items.** Before deduping for the fix, give every BLOCKING and NON-BLOCKING
    item an ID `<lens>#<n>`, numbered per lens across the phase and never reused. A
-   repeated open item keeps its ID (the reviewer prefixes it). Number only new items.
+   repeated open item keeps its ID (the reviewer prefixes it; for the CI lens, the same
+   failing check keeps its ID). Number only new items.
 10. **Judge and log.** A lens passes with VERDICT PASS and no open BLOCKING; a dispatched
-   lens with a missing or unparseable verdict is FAIL. Only the
-   reviewers' own verdicts decide: never override one, downgrade a blocker, or mark an
+   lens with a missing or unparseable verdict is FAIL. Only the reviewers' and the CI
+   script's own verdicts decide: never override one, downgrade a blocker, or mark an
    item INVALID yourself. Log the round.
 
 Re-run an interrupted round whole: the frozen panel, on its recorded transport and round

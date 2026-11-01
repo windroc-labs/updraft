@@ -90,7 +90,7 @@ flowchart LR
 ```mermaid
 flowchart TD
     pin[Pin HEAD as reviewed_sha, push it when publishing] --> lenses[Reviewers read reviewed_sha]
-    pin --> verifier[Verifier: CI checks, or the full suite locally]
+    pin --> verifier[Verifier: ci-verdict.py on CI, or the full suite locally]
     lenses --> judge{Every lens PASS?}
     verifier --> judge
     verifier -.->|PR conflicts with its base| merge[Merge the base, never rebase] --> pin
@@ -106,7 +106,8 @@ flowchart TD
 ## CI 与 pull request
 
 有 CI 的仓库，只要 CI 能跑，就从不在本地跑完整测试套件。run 会把 branch 发布为 draft PR，
-verifier 读取被审 commit 的 CI 检查，其他 reviewer 则阅读代码。
+此时 verifier 是 `scripts/ci-verdict.py`，而不是 reviewer agent：它读取被审 commit 的 CI 检查，reviewer 则阅读代码，
+它的 verdict 与 reviewer 的一样计入。CI 给不出可用结果时，该轮由 verification reviewer 在本地跑完整套件。
 
 | `publish` | 何时 | 推送内容 | 结束时 |
 | --- | --- | --- | --- |
@@ -119,7 +120,7 @@ verifier 读取被审 commit 的 CI 检查，其他 reviewer 则阅读代码。
 - S4 会写明运行测试的 CI 检查。如果没有，verification 在本地运行。
 - 在派发一轮 review 之前，run 会查看 PR 最多 20 秒。合并冲突，或固定 commit 的 CI 已经失败，
   会在任何 reviewer 运行前先修复；红色的 CI 仍算一轮。仍在运行的 CI 从不拖住这一轮：
-  verifier 会和其他 reviewer 一起等它。
+  verifier 会和 reviewer 一起等它。
 - 在 `pr` 模式下，推送第一个之后的每个 task 前，run 会查看上一次推送的 CI（它在编写当前 task
   时已在运行），当场修复红色结果或冲突，免得耗掉一轮 review。
 - CI 失败与其他 blocker 一样进入修复循环。
@@ -175,7 +176,7 @@ Notes 以及 task list。上下文压缩之后，run 会依据它和 `git log` �
 | `correctness-reviewer.md` | 逻辑、边界与极端情况、错误路径 | work | core |
 | `requirement-fidelity-reviewer.md` | requirement 和 spec 已实现，没有遗漏、偏离或多加 | work | core |
 | `doc-reviewer.md` | 仓库中任何因改动而变得不实的文档；臃肿的文档修改 | work | core |
-| `verification-reviewer.md` | 在被审 SHA 上运行完整检查，本地或读取 CI：命令、退出码、测试数和失败数 | work | core |
+| `verification-reviewer.md` | verification 在本地运行时，在被审 SHA 上运行完整检查：命令、退出码、测试数和失败数 | work | core |
 | `code-quality-reviewer.md` | 可读性、命名、重复、死代码、复杂度、注释 | work | optional：代码文件 |
 | `test-reviewer.md` | 测试断言了 spec，并覆盖新增或改动的代码 | work | optional：代码或测试文件 |
 | `performance-reviewer.md` | 复杂度、N+1、内存分配、泄漏、热点 | work | optional：代码文件 |

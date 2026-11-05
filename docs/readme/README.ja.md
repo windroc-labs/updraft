@@ -69,6 +69,10 @@ light-build はスコープを制限しません。渡されたものは何で�
 どちらのホストもこれらを自動ではモデルに見せません。worker は `updraft:principles` を呼び出して各名前とファイルの一覧を得て、
 そのファイルを読みます。`/updraft:principle-fix-root-causes` のように名前で直接実行することもできます。
 
+さらに 2 つの skill もそのまま同梱しています。`grilling`（`/updraft:grilling`）は、番号付きの質問と推奨回答を 1 ラウンドずつ示して
+ユーザーに問い、計画の決定事項がすべて決まるまで続けます。`to-tickets`（`/updraft:to-tickets`）は計画を tracer-bullet チケットに分け、
+各チケットにそれをブロックするチケットを記します。モデルは `grilling` を自分で開始できますが、`to-tickets` は名前で呼んだときだけ実行されます。
+
 ## run の流れ
 
 ```mermaid
@@ -223,7 +227,9 @@ updraft/
 │   ├── council/SKILL.md          # /updraft:council: independent picks at a fork
 │   ├── principles/SKILL.md       # /updraft:principles: index of the pstack skills below
 │   ├── principle-<name>/         # 24 pstack principles: verbatim SKILL.md + our agents/openai.yaml
-│   └── unslop/                   # pstack unslop: verbatim SKILL.md + our agents/openai.yaml
+│   ├── unslop/                   # pstack unslop: verbatim SKILL.md + our agents/openai.yaml
+│   ├── grilling/                 # grilling: verbatim SKILL.md
+│   └── to-tickets/               # to-tickets: verbatim SKILL.md + our agents/openai.yaml
 ├── references/
 │   ├── updraft-common.md         # run rules build and light-build share
 │   └── review-round.md           # how a review round runs and loops
@@ -240,6 +246,6 @@ updraft/
 ├── tests/
 │   └── test_scripts.py           # stdlib unittest for the scripts
 ├── AGENTS.md                     # contributor guidance for Claude Code and Codex
-├── THIRD_PARTY_NOTICES.md        # pstack provenance and MIT license
+├── THIRD_PARTY_NOTICES.md        # vendored skills' provenance and licenses
 └── README.md
 ```

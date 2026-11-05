@@ -74,6 +74,12 @@ engineering principles and its unslop writing method, verbatim, as
 its own: a worker invokes `updraft:principles`, which lists each name with its file, then
 reads that file. You can also run one by name, such as `/updraft:principle-fix-root-causes`.
 
+It also ships two more skills, verbatim. `grilling` (`/updraft:grilling`) interviews the
+user a round of numbered questions at a time, each with a recommended answer, until every
+decision in a plan is settled. `to-tickets` (`/updraft:to-tickets`) splits a plan into
+tracer-bullet tickets, each naming the tickets that block it. The model may start
+`grilling` on its own; `to-tickets` runs only by name.
+
 ## How a run works
 
 ```mermaid
@@ -244,7 +250,9 @@ updraft/
 │   ├── council/SKILL.md          # /updraft:council: independent picks at a fork
 │   ├── principles/SKILL.md       # /updraft:principles: index of the pstack skills below
 │   ├── principle-<name>/         # 24 pstack principles: verbatim SKILL.md + our agents/openai.yaml
-│   └── unslop/                   # pstack unslop: verbatim SKILL.md + our agents/openai.yaml
+│   ├── unslop/                   # pstack unslop: verbatim SKILL.md + our agents/openai.yaml
+│   ├── grilling/                 # grilling: verbatim SKILL.md
+│   └── to-tickets/               # to-tickets: verbatim SKILL.md + our agents/openai.yaml
 ├── references/
 │   ├── updraft-common.md         # run rules build and light-build share
 │   └── review-round.md           # how a review round runs and loops
@@ -261,6 +269,6 @@ updraft/
 ├── tests/
 │   └── test_scripts.py           # stdlib unittest for the scripts
 ├── AGENTS.md                     # contributor guidance for Claude Code and Codex
-├── THIRD_PARTY_NOTICES.md        # pstack provenance and MIT license
+├── THIRD_PARTY_NOTICES.md        # vendored skills' provenance and licenses
 └── README.md
 ```

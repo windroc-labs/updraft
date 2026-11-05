@@ -69,6 +69,10 @@ git 저장소가 있든 없든 동작합니다. `lenses=<dir>`로 여러분의 r
 두 호스트 모두 이를 모델에 스스로 보여 주지 않습니다. worker는 `updraft:principles`를 호출해 각 이름과 파일 목록을 받은 뒤
 그 파일을 읽습니다. `/updraft:principle-fix-root-causes`처럼 이름으로 직접 실행할 수도 있습니다.
 
+두 skill도 원문 그대로 들어 있습니다. `grilling`(`/updraft:grilling`)은 번호를 붙인 질문과 추천 답변을 한 라운드씩 제시하며
+계획의 모든 결정이 정해질 때까지 사용자에게 묻습니다. `to-tickets`(`/updraft:to-tickets`)는 계획을 tracer-bullet 티켓으로 나누고,
+각 티켓에 그것을 막는 티켓을 적습니다. 모델은 `grilling`을 스스로 시작할 수 있고, `to-tickets`는 이름으로 호출할 때만 실행됩니다.
+
 ## run의 진행 방식
 
 ```mermaid
@@ -221,7 +225,9 @@ updraft/
 │   ├── council/SKILL.md          # /updraft:council: independent picks at a fork
 │   ├── principles/SKILL.md       # /updraft:principles: index of the pstack skills below
 │   ├── principle-<name>/         # 24 pstack principles: verbatim SKILL.md + our agents/openai.yaml
-│   └── unslop/                   # pstack unslop: verbatim SKILL.md + our agents/openai.yaml
+│   ├── unslop/                   # pstack unslop: verbatim SKILL.md + our agents/openai.yaml
+│   ├── grilling/                 # grilling: verbatim SKILL.md
+│   └── to-tickets/               # to-tickets: verbatim SKILL.md + our agents/openai.yaml
 ├── references/
 │   ├── updraft-common.md         # run rules build and light-build share
 │   └── review-round.md           # how a review round runs and loops
@@ -238,6 +244,6 @@ updraft/
 ├── tests/
 │   └── test_scripts.py           # stdlib unittest for the scripts
 ├── AGENTS.md                     # contributor guidance for Claude Code and Codex
-├── THIRD_PARTY_NOTICES.md        # pstack provenance and MIT license
+├── THIRD_PARTY_NOTICES.md        # vendored skills' provenance and licenses
 └── README.md
 ```

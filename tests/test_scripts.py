@@ -1955,10 +1955,6 @@ class PstackLibraryTests(unittest.TestCase):
     def pstack_dirs(self):
         return sorted(d for d in os.listdir(SKILLS) if d.startswith("principle-")) + ["unslop"]
 
-    def gated_dirs(self):
-        return sorted(d for d in os.listdir(SKILLS)
-                      if os.path.isfile(os.path.join(SKILLS, d, "agents", "openai.yaml")))
-
     def notice_dirs(self):
         rows = re.findall(r"(?m)^\| `skills/([\w-]+)/SKILL\.md` \| `pstack/skills/([\w-]+)/SKILL\.md` \|$",
                           self.read(os.path.join(REPO, "THIRD_PARTY_NOTICES.md")))
@@ -1969,12 +1965,11 @@ class PstackLibraryTests(unittest.TestCase):
     def index_dirs(self):
         return sorted(re.findall(r"`\.\./([\w-]+)/SKILL\.md`", self.read(self.INDEX)))
 
-    def test_notice_index_and_gates_cover_exactly_the_pstack_set(self):
+    def test_notice_and_index_cover_exactly_the_pstack_set(self):
         pstack = self.pstack_dirs()
         self.assertEqual(len(pstack), 25)
         self.assertEqual(self.notice_dirs(), sorted(pstack))
         self.assertEqual(self.index_dirs(), sorted(pstack))
-        self.assertEqual(self.gated_dirs(), sorted(pstack))
 
     def test_index_paths_resolve_to_the_named_skill(self):
         for d in self.index_dirs():
@@ -1995,6 +1990,54 @@ class PstackLibraryTests(unittest.TestCase):
         self.assertIn("\ndescription: ", fm)
         self.assertNotIn("disable-model-invocation", fm)
         self.assertFalse(os.path.exists(os.path.join(SKILLS, "principles", "agents", "openai.yaml")))
+
+
+class VendoredSkillTests(unittest.TestCase):
+    """Every skill is model-invocable on both hosts or on neither, and the vendored
+    grilling and to-tickets skills ship with their notice, which alone names their origin."""
+
+    read = PstackLibraryTests.read
+    frontmatter = PstackLibraryTests.frontmatter
+
+    NOTICE = os.path.join(REPO, "THIRD_PARTY_NOTICES.md")
+
+    def section(self):
+        """The notice section that lists skills/grilling/SKILL.md."""
+        return next(s for s in self.read(self.NOTICE).split("\n## ") if "| `skills/grilling/SKILL.md` |" in s)
+
+    def rows(self):
+        return re.findall(r"(?m)^\| `skills/([\w-]+)/SKILL\.md` \| `skills/([\w-]+)/([\w-]+)/SKILL\.md` \|$", self.section())
+
+    def test_codex_gate_mirrors_claude_frontmatter_for_every_skill(self):
+        for d in sorted(d for d in os.listdir(SKILLS) if os.path.isfile(os.path.join(SKILLS, d, "SKILL.md"))):
+            with self.subTest(skill=d):
+                hidden_on_claude = "\ndisable-model-invocation: true\n" in self.frontmatter(
+                    os.path.join(SKILLS, d, "SKILL.md")) + "\n"
+                sidecar = os.path.join(SKILLS, d, "agents", "openai.yaml")
+                hidden_on_codex = os.path.isfile(sidecar) and re.search(
+                    r"(?m)^policy:\n  allow_implicit_invocation: false$", self.read(sidecar)) is not None
+                self.assertEqual(hidden_on_codex, hidden_on_claude)
+
+    def test_notice_covers_exactly_grilling_and_to_tickets(self):
+        self.assertEqual(sorted(self.rows()), [("grilling", "productivity", "grilling"),
+                                               ("to-tickets", "engineering", "to-tickets")])
+        for ours, _, _ in self.rows():
+            with self.subTest(skill=ours):
+                self.assertIn("\nname: %s\n" % ours, self.frontmatter(os.path.join(SKILLS, ours, "SKILL.md")) + "\n")
+
+    def test_origin_is_named_only_in_the_notice(self):
+        section = self.section()
+        owner = section.split("/", 1)[0]
+        holder = re.search(r"(?m)^Copyright \(c\) \d{4} (.+)$", section).group(1)
+        names = {owner.lower(), holder.lower(), holder.lower().replace(" ", "-")}
+        exempt = {"THIRD_PARTY_NOTICES.md"} | {"skills/%s/SKILL.md" % ours for ours, _, _ in self.rows()}
+        tracked = subprocess.run(["git", "-C", REPO, "ls-files"], capture_output=True, text=True,
+                                 check=True).stdout.split()
+        for rel in sorted(set(tracked) - exempt):
+            with self.subTest(path=rel):
+                with open(os.path.join(REPO, rel), encoding="utf-8", errors="replace") as fh:
+                    text = fh.read().lower()
+                self.assertFalse([n for n in names if n in text])
 
 
 class CodeownersTests(unittest.TestCase):

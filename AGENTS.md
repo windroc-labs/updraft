@@ -108,7 +108,15 @@ and review settings. Understanding the system means reading those four files plu
   directory's `agents/openai.yaml` is ours and keeps Codex from listing the skill to the model;
   their `disable-model-invocation: true` does the same on Claude. Workers find them by name
   through `skills/principles/SKILL.md`, the model-invocable index. `PstackLibraryTests` keeps
-  the notice table, the index and the gates listing the same set.
+  the notice table and the index listing the same set.
+
+- **Vendored `skills/grilling/` and `skills/to-tickets/`.** Verbatim copies; never edit them,
+  re-copy from upstream (`THIRD_PARTY_NOTICES.md` names the commit and paths and holds the
+  license, and is the only file that names their origin). `to-tickets`'s `agents/openai.yaml`
+  is ours; `grilling` has none, so the model may invoke it on both hosts.
+  `VendoredSkillTests` keeps every skill's Codex gate matching its Claude
+  `disable-model-invocation`, the notice table matching these two directories, and their
+  origin, as the notice names it, out of every other tracked file but the two `SKILL.md` copies.
 
 - **Selection stage (`scripts/select-panel.py`).** Deterministic, stdlib-only router:
   `(phase, signals) → JSON panel` of `{agent, subagent_type, file, tier, matched}`; `file`

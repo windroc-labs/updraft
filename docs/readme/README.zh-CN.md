@@ -70,6 +70,10 @@ light-build 不把关范围，你给它什么它就做什么。选哪个 skill �
 worker 调用 `updraft:principles`，它列出每个名称及其文件，worker 再读取该文件。
 你也可以按名称直接运行其中一个，例如 `/updraft:principle-fix-root-causes`。
 
+插件还原样收录了另外两个 skill。`grilling`（`/updraft:grilling`）按轮次向用户提出编号问题，每题附推荐答案，
+直到计划中的每个决定都确定下来。`to-tickets`（`/updraft:to-tickets`）把计划拆成 tracer-bullet 工单，每张写明阻塞它的工单。
+模型可以自行启动 `grilling`；`to-tickets` 只在按名称调用时运行。
+
 ## 一次 run 如何进行
 
 ```mermaid
@@ -226,7 +230,9 @@ updraft/
 │   ├── council/SKILL.md          # /updraft:council: independent picks at a fork
 │   ├── principles/SKILL.md       # /updraft:principles: index of the pstack skills below
 │   ├── principle-<name>/         # 24 pstack principles: verbatim SKILL.md + our agents/openai.yaml
-│   └── unslop/                   # pstack unslop: verbatim SKILL.md + our agents/openai.yaml
+│   ├── unslop/                   # pstack unslop: verbatim SKILL.md + our agents/openai.yaml
+│   ├── grilling/                 # grilling: verbatim SKILL.md
+│   └── to-tickets/               # to-tickets: verbatim SKILL.md + our agents/openai.yaml
 ├── references/
 │   ├── updraft-common.md         # run rules build and light-build share
 │   └── review-round.md           # how a review round runs and loops
@@ -243,6 +249,6 @@ updraft/
 ├── tests/
 │   └── test_scripts.py           # stdlib unittest for the scripts
 ├── AGENTS.md                     # contributor guidance for Claude Code and Codex
-├── THIRD_PARTY_NOTICES.md        # pstack provenance and MIT license
+├── THIRD_PARTY_NOTICES.md        # vendored skills' provenance and licenses
 └── README.md
 ```

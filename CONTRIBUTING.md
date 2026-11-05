@@ -4,13 +4,15 @@ See [local development](README.md#local-development) for helper tests and roster
 
 ## Smoke protocol
 
-Run both build and light-build on Claude Code and Codex with the candidate's skill
+Run both build and light-build on Claude Code, Codex and OpenCode with the candidate's skill
 files and bundled resources. Also run `review` on a document outside any git repo, once
 with the default reviewers and once with `lenses=` naming an outside folder, and a
 standalone `council`; record each `review-result` and the fork and decision lines. In Claude, load the candidate with
 `claude --plugin-dir <absolute-checkout>` and invoke `/updraft:build` or
 `/updraft:light-build`; in Codex, point to the candidate's absolute `SKILL.md`
-path with the same requirement so this smoke tests the candidate version. Codex
+path with the same requirement so this smoke tests the candidate version. In OpenCode,
+load the candidate with `"plugin": ["file://<absolute-checkout>/.opencode-plugin/updraft.js"]`
+in `opencode.json` and invoke `/updraft:build` or `/updraft:light-build`. Codex
 can also invoke installed skills when a request matches.
 
 Exercise production and a fixture whose full checks expose a failure outside S5's

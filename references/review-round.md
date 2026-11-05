@@ -14,6 +14,8 @@ file's directory. A section name in parentheses, such as (Publish), is `updraft-
 
 - On Claude Code, dispatch a lens from this plugin's `agents/` as `updraft:<name>` via
   the Agent tool. It keeps the `model:`, `effort:` and tools from `../agents/<name>.md`.
+- On OpenCode, dispatch it as `updraft:<name>` via the task tool. It keeps the file's
+  tool limits and runs on the session model. A generic agent there is `general`.
 - Give a lens from another folder (selector `subagent_type: "general-purpose"`), and every
   lens on a host without named dispatch, to a fresh generic agent: the full body of its
   file (`../agents/<name>.md`, or selector `file`) ahead of its run-input prompt, keeping

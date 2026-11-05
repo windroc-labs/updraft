@@ -2064,5 +2064,185 @@ class CodeownersTests(unittest.TestCase):
             self.assertIn(path, paths)
 
 
+class ManifestVersionTests(unittest.TestCase):
+    """Claude Code, Codex and OpenCode install the same plugin name at the same version."""
+
+    def test_manifests_share_name_and_version(self):
+        found = {}
+        for rel in (".claude-plugin/plugin.json", ".codex-plugin/plugin.json", "package.json"):
+            with open(os.path.join(REPO, rel), encoding="utf-8") as fh:
+                data = json.load(fh)
+            found[rel] = (data["name"], data["version"])
+        self.assertEqual(len(set(found.values())), 1, found)
+        self.assertEqual(next(iter(found.values()))[0], "updraft")
+
+
+OPENCODE_PLUGIN = os.path.join(REPO, ".opencode-plugin", "updraft.js")
+
+# Imports the plugin at argv[1], runs its config hook on the JSON config at argv[2], prints the result.
+OPENCODE_HARNESS = """\
+import { readFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
+const mod = await import(pathToFileURL(process.argv[2]).href);
+const hooks = await mod.Updraft({ directory: process.cwd() });
+const config = JSON.parse(readFileSync(process.argv[3], "utf8"));
+await hooks.config(config);
+console.log(JSON.stringify(config));
+"""
+
+
+@unittest.skipUnless(shutil.which("node"), "node is not installed")
+class OpenCodePluginTests(unittest.TestCase):
+    """The OpenCode plugin's config hook registers updraft's skills, `/updraft:<skill>` commands and
+    reviewer subagents, keeping what the user's config already sets."""
+
+    read = PstackLibraryTests.read
+    frontmatter = PstackLibraryTests.frontmatter
+
+    def configure(self, config=None, root=REPO):
+        with tempfile.TemporaryDirectory() as tmp:
+            harness = os.path.join(tmp, "harness.mjs")
+            given = os.path.join(tmp, "config.json")
+            write_raw(tmp, "harness.mjs", OPENCODE_HARNESS)
+            write_raw(tmp, "config.json", json.dumps(config or {}))
+            plugin = os.path.join(root, ".opencode-plugin", "updraft.js")
+            done = subprocess.run(["node", harness, plugin, given], capture_output=True, text=True, cwd=tmp)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        return json.loads(done.stdout)
+
+    def fixture(self, tmp, skills, agents):
+        """A plugin root in tmp: this plugin file, a package.json, and the given SKILL.md / agent texts."""
+        os.makedirs(os.path.join(tmp, ".opencode-plugin"))
+        shutil.copy(OPENCODE_PLUGIN, os.path.join(tmp, ".opencode-plugin"))
+        write_raw(tmp, "package.json", json.dumps({"name": "updraft", "skills": ["./skills/"]}))
+        for name, text in skills.items():
+            os.makedirs(os.path.join(tmp, "skills", name))
+            write_raw(os.path.join(tmp, "skills", name), "SKILL.md", text)
+        os.makedirs(os.path.join(tmp, "skills", "no-skill-file"))
+        if agents is None:
+            return tmp
+        os.makedirs(os.path.join(tmp, "agents"))
+        for name, text in agents.items():
+            write_raw(os.path.join(tmp, "agents"), name + ".md", text)
+        return tmp
+
+    def skill_dirs(self):
+        return sorted(d for d in os.listdir(SKILLS) if os.path.isfile(os.path.join(SKILLS, d, "SKILL.md")))
+
+    def test_every_skill_is_found_and_is_an_updraft_command(self):
+        config = self.configure()
+        self.assertEqual(config["skills"], {"paths": [SKILLS]})
+        self.assertEqual(sorted(config["command"]), ["updraft:" + d for d in self.skill_dirs()])
+        light = config["command"]["updraft:light-build"]
+        self.assertTrue(light["description"].startswith("Low-ceremony autonomous build"))
+        self.assertIn("# Updraft: light-build", light["template"])
+        self.assertIn("Base directory for this skill: " + os.path.join(SKILLS, "light-build"), light["template"])
+        self.assertNotIn("\nname: light-build\n", light["template"])
+
+    def test_dispatchable_reviewers_are_subagents(self):
+        agents = self.configure()["agent"]
+        roster = sorted(f[:-3] for f in os.listdir(os.path.join(REPO, "agents")) if f.endswith(".md"))
+        self.assertEqual(sorted(agents), ["updraft:" + n for n in roster if n != "reviewer-contract"])
+        correctness = agents["updraft:correctness-reviewer"]
+        self.assertEqual(correctness["mode"], "subagent")
+        self.assertEqual(correctness["description"], "Work-phase correctness reviewer (read-only): logic errors, edge "
+                         "and boundary cases, error paths and failure modes. Returns the strict verdict grammar.")
+        self.assertEqual(correctness["permission"], dict.fromkeys(
+            ("edit", "task", "todowrite", "question", "webfetch", "websearch", "lsp", "skill"), "deny"))
+        self.assertEqual(correctness["steps"], 60)
+        self.assertNotIn("model", correctness)
+        self.assertIn("VERDICT", correctness["prompt"])
+        self.assertFalse(correctness["prompt"].startswith("---"))
+
+    def test_explicit_only_skills_are_denied_to_the_skill_tool(self):
+        denied = self.configure()["permission"]["skill"]
+        explicit = [d for d in self.skill_dirs() if "\ndisable-model-invocation: true\n" in
+                    self.frontmatter(os.path.join(SKILLS, d, "SKILL.md")) + "\n"]
+        self.assertTrue(explicit)
+        self.assertEqual(denied, dict.fromkeys(explicit, "deny"))
+
+    def test_user_settings_are_kept(self):
+        mine = {"template": "mine"}
+        config = self.configure({
+            "skills": {"paths": ["/elsewhere"]},
+            "command": {"updraft:build": mine, "other": mine},
+            "agent": {"updraft:doc-reviewer": {"model": "p/m", "permission": {"bash": "ask", "edit": "ask"}},
+                      "mine": {"prompt": "mine"}},
+            "permission": {"bash": "ask", "skill": {"unslop": "allow", "*": "ask", "principle-*": "allow"}},
+        })
+        self.assertEqual(config["skills"], {"paths": ["/elsewhere", SKILLS]})
+        self.assertEqual(config["command"]["updraft:build"], mine)
+        self.assertEqual(config["command"]["other"], mine)
+        self.assertIn("updraft:light-build", config["command"])
+        doc = config["agent"]["updraft:doc-reviewer"]
+        self.assertEqual(doc["model"], "p/m")
+        self.assertEqual(doc["mode"], "subagent")
+        self.assertIn("VERDICT", doc["prompt"])
+        self.assertEqual((doc["permission"]["bash"], doc["permission"]["edit"], doc["permission"]["task"]),
+                         ("ask", "ask", "deny"))
+        self.assertEqual(config["agent"]["mine"], {"prompt": "mine"})
+        self.assertEqual(config["permission"]["bash"], "ask")
+        # OpenCode applies the last matching rule: the user's rules keep their order, the denies
+        # go right after the user's `*`, and a skill the user names gets no deny.
+        rules = list(config["permission"]["skill"].items())
+        self.assertEqual(rules[:2], [("unslop", "allow"), ("*", "ask")])
+        self.assertEqual(rules[-1], ("principle-*", "allow"))
+        self.assertEqual(rules.count(("unslop", "allow")), 1)
+        self.assertNotIn(("unslop", "deny"), rules)
+        self.assertIn(("to-tickets", "deny"), rules[2:-1])
+        self.assertIn(("principle-fix-root-causes", "deny"), rules[2:-1])
+
+    def test_array_skills_and_string_permissions(self):
+        config = self.configure({"skills": ["/elsewhere"], "permission": {"skill": "ask"}})
+        self.assertEqual(config["skills"], ["/elsewhere", SKILLS])
+        self.assertEqual(list(config["permission"]["skill"].items())[0], ("*", "ask"))
+        self.assertEqual(config["permission"]["skill"]["unslop"], "deny")
+        # A string permission is OpenCode's shorthand for {"*": <action>}.
+        permission = self.configure({"permission": "allow"})["permission"]
+        self.assertEqual(list(permission)[0], "*")
+        self.assertEqual(permission["*"], "allow")
+        self.assertEqual(permission["skill"]["unslop"], "deny")
+
+    def test_frontmatter_forms(self):
+        skills = {
+            "plain": "---\nname: plain\ndescription: Plain text: with a colon\n---\n\nPlain body.\n",
+            "quoted": '---\nname: quoted\ndescription: "Quoted \\"text\\""\n---\nQuoted body.\n',
+            "folded": "---\nname: folded\ndescription: >-\n  Folded one\n  and two.\n---\nFolded body.\n",
+            "renamed-dir": "---\nname: renamed\ndescription: d\n---\nbody\n",
+            "no-frontmatter": "Just a body.\n",
+        }
+        agents = {
+            "writer-reviewer": "---\nname: writer-reviewer\ndescription: w\ntools: Read, Edit, Agent\n"
+                               "maxTurns: many\nphase: work\n---\nWriter body.\n",
+            "inert": "---\nname: inert\ndescription: not dispatchable\n---\nInert body.\n",
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self.fixture(tmp, skills, agents)
+            config = self.configure(root=root)
+        commands = config["command"]
+        self.assertEqual(sorted(commands), ["updraft:" + n for n in
+                                            ("folded", "no-frontmatter", "plain", "quoted", "renamed")])
+        self.assertEqual(commands["updraft:plain"]["description"], "Plain text: with a colon")
+        self.assertEqual(commands["updraft:quoted"]["description"], 'Quoted "text"')
+        self.assertEqual(commands["updraft:folded"]["description"], "Folded one and two.")
+        self.assertEqual(commands["updraft:no-frontmatter"]["description"], "")
+        self.assertTrue(commands["updraft:plain"]["template"].startswith("Plain body.\n"))
+        self.assertTrue(commands["updraft:no-frontmatter"]["template"].startswith("Just a body.\n"))
+        self.assertNotIn("permission", config)
+        writer = config["agent"]["updraft:writer-reviewer"]
+        self.assertEqual(writer["permission"], dict.fromkeys(
+            ("glob", "grep", "bash", "todowrite", "question", "webfetch", "websearch", "lsp", "skill"), "deny"))
+        self.assertNotIn("steps", writer)
+        self.assertEqual(writer["prompt"], "Writer body.\n")
+        self.assertNotIn("updraft:inert", config["agent"])
+
+    def test_no_agents_folder(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self.fixture(tmp, {"only": "---\nname: only\ndescription: d\n---\nbody\n"}, None)
+            config = self.configure({"agent": {"mine": {"prompt": "mine"}}}, root=root)
+        self.assertEqual(config["agent"], {"mine": {"prompt": "mine"}})
+        self.assertEqual(sorted(config["command"]), ["updraft:only"])
+
+
 if __name__ == "__main__":
     unittest.main()

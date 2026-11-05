@@ -2,7 +2,7 @@
 name: review
 description: "Use to review a document (a spec, PRD, design or plan) against its author's own words with independent reviewer agents, fixing it yourself until every reviewer passes or the round cap. Works without a git repo, with this plugin's reviewers or a folder of your own. Pass doc=<path> requirement=<text or path>."
 argument-hint: "doc=<path> requirement=<text|path> [lenses=<dir>] [repo=<path>] [log=<path>] [cap=<n>]"
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent, Task, Workflow, ToolSearch
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent, Task, ToolSearch
 ---
 
 # Updraft: review
@@ -47,7 +47,7 @@ at `r1`, below any earlier entries.
 2. **Rounds.** Run them per review-round.md, logging to `log`:
    - doc fields: `spec_doc=<doc>`; with `repo`, the prompt's `worktree=` is `repo` and
      `base_ref=` its HEAD;
-   - freeze line: `review panel: core=[…] +optional=[…] transport=Workflow`;
+   - freeze line: `review panel: core=[…] +optional=[…]`;
    - re-review set: the full panel, on the whole document.
 3. **Fix** the document between rounds per review-round.md (The fix), changing only what
    a blocker needs. A blocker only the author can settle is not yours to guess: return

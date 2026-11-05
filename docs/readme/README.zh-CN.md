@@ -194,15 +194,7 @@ Notes 以及 task list。上下文压缩之后，run 会依据它和 `git log` �
 `updraft:<name>` 运行，使用其 frontmatter 中的 `model:` 和 `effort:`；在 Codex 上则沿用会话的模型。
 被 re-review 的 lens 会重新开始，带上它之前的 review 项，在 S6 中还带上修复的 diff。
 
-### Plugin workflow（`workflows/review-round.js`）
-
-一轮 review 的默认传输方式 `Workflow({name: "updraft:updraft-review-round", args})`
-会并行运行每个成员，并按 schema 校验每个 verdict。没有 Workflow 时，skill 会以原生方式派发。
-
-- 输入 `args`：`{phase, members: [{agent, subagent_type, prompt}]}`。
-- 输出：`{phase, verdicts: [{agent, VERDICT, BLOCKING, NON_BLOCKING, synthetic}]}`，按成员顺序排列。
-  只有当 reviewer 给出 `PASS` 且没有 `BLOCKING` 时，`VERDICT` 才是 `PASS`。没有给出 verdict 的成员
-  记为 `FAIL` 并带 `synthetic: true`；skill 会以原生方式重新派发它一次。
+每轮将全部成员作为一批新的普通 subagent（子代理）并行派发，达到主机并发上限时排队。
 
 ## 本地开发
 
@@ -245,8 +237,6 @@ updraft/
 │   ├── resolve-branch.py         # S1: resume / stay / reuse / create / stop
 │   ├── _frontmatter.py           # parser shared by the selector and the roster lint
 │   └── lint-roster.py            # roster lint
-├── workflows/
-│   └── review-round.js           # plugin workflow: one parallel review round
 ├── agents/                       # review roster
 │   ├── reviewer-contract.md      # authoring template, inlined into ordinary reviewers
 │   └── *-reviewer.md             # one lens each

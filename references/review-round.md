@@ -24,8 +24,7 @@ file's directory. A section name in parentheses, such as (Publish), is `updraft-
 
 The caller says where these go:
 
-- Panel freeze: the caller's freeze line, ending `transport=Workflow`. Append `->Task` or
-  `-><actual native tool>` if the fallback fires.
+- Panel freeze: the caller's freeze line.
 - Round, with the verdict roll-up and one gist per blocker: `S6 r1 @<reviewed_sha>: correctness=FAIL verification=PASS (command=<cmd>, exit code=0, tests=12, failures=0) -> correctness#1 off-by-one in slice bound; fixing`.
   A spec-phase round has no `@<reviewed_sha>`. A round step 3 stopped logs
   `verification=FAIL (CI check; panel not dispatched)`.
@@ -66,21 +65,12 @@ Run each round in these steps:
    weigh. It never claims the work is correct and never narrows the lens's checklist.
    A re-reviewed lens also gets its prior items as `<lens>#<n> "<gist>"`. In the work
    phase it also gets the fix diff `git -C <worktree> diff <pre-fix HEAD>..HEAD`.
-5. **Dispatch all members together**, never one at a time, re-reviews included. Queue
-   the rest when the host's concurrency limit is reached.
-   - **Workflow (default):** one call per round,
-     `Workflow({name: "updraft:updraft-review-round", args: {phase: "<spec|work>", members: [{agent, subagent_type, prompt}, …]}})`.
-     It returns `{phase, verdicts: [{agent, VERDICT, BLOCKING, NON_BLOCKING, synthetic}, …]}`
-     in member order. Never pass `resumeFromRunId`. Re-dispatch a `synthetic: true` member
-     once as a fresh subagent (`Task`) with its prompt; if it still gives no verdict, it
-     is FAIL. A generic member goes in as `general-purpose`, its file's body ahead of its
-     prompt.
-   - **Native fallback:** if `Workflow` is unavailable or the call fails, dispatch the same
-     members fresh as one parallel subagent batch (`Task`) with the same prompts. Stay on
-     the fallback for the rest of the phase and note it in the freeze line.
+5. **Dispatch all members together** as one parallel subagent batch (`Agent` / `Task`,
+   Codex `spawn_agent`), re-reviews included. Queue the rest when the host's concurrency limit is reached.
+   Use fresh subagents per Dispatch, with the same rule on every host.
    - **CI lens (`verification=ci`):** run the CI lens command while they work: in the
-     same parallel batch as the dispatch call, or right after it when that call returns
-     at once (Claude's `Workflow` does). Run it unpiped with its stdout to a file and a
+     same parallel batch as the subagents, or right after dispatch when the host returns
+     at once. Run it unpiped with its stdout to a file and a
      10-minute tool timeout (Bash `timeout: 600000`). Never hold the members back for it,
      nor it for them.
      Exit 0 or 1: its stdout is the `verification` verdict, in the strict grammar.
@@ -106,8 +96,7 @@ Run each round in these steps:
    script's own verdicts decide: never override one, downgrade a blocker, or mark an
    item INVALID yourself. Log the round.
 
-Re-run an interrupted round whole: the frozen panel, on its recorded transport and round
-number.
+Re-run an interrupted round whole: the frozen panel and round number.
 
 ## The loop
 

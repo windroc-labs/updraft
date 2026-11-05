@@ -86,9 +86,9 @@ and review settings. Understanding the system means reading those four files plu
   Both skills use neutral actions with Claude tool forms in parentheses.
   Claude reviewers run as `updraft:<name>` with configured models;
   Codex inherits the host model and gives generic agents the canonical reviewer files.
-  **Each round** uses the plugin workflow when exposed, otherwise native dispatch; a re-reviewed lens
-  is a fresh member primed with its prior items (+ the fix diff in S6). If that call fails,
-  the phase falls back to a native host dispatch batch of the same members and prompts.
+  **Each round** dispatches all members as one parallel batch of fresh subagents,
+  queueing at the host's concurrency limit. A re-reviewed lens is primed with its prior
+  items (+ the fix diff in S6).
   **Both surfaces** run the convergence loop natively in the orchestrator (Round 1 + fix →
   re-review until all-PASS or the per-phase cap). The orchestrator owns the loop, the fix
   (made by the orchestrator itself), and the re-review set: S3 the full panel; S6 the
@@ -120,12 +120,6 @@ and review settings. Understanding the system means reading those four files plu
   the reserved `@structural` work-phase token, which matches iff the diff changed file
   topology (any A/D/R/C file in `git diff --name-status`). A file is a "reviewer" iff its
   frontmatter has `phase` (`lint-roster.py` mirrors this rule — keep the two in lockstep).
-
-- **Plugin workflow (`workflows/review-round.js`).** The per-round review transport,
-  invoked by name as `updraft:updraft-review-round` (the
-  runtime names plugin workflows `<plugin>:<meta.name>`). The default S3/S6 review-round
-  transport when Workflow is exposed; native host dispatch is the fallback.
-  Contract in README "Plugin workflow".
 
 - **S1 resolver (`scripts/resolve-branch.py`).** Decides where a run works:
   resume this input's unfinished plan doc (by `input_sha`), stay on a non-default branch,

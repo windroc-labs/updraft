@@ -2,7 +2,7 @@
 name: build
 description: "Use to build a new work product from a requirement, end to end: work on the current feature branch or a new isolated worktree, write and review a spec, write a task list, implement, and review-loop to a single review-ready branch, plus a draft PR when the repo has CI or you ask for one (never merges). Pass the requirement text, or a path to an existing spec file."
 argument-hint: "<requirements|spec-file-path>"
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent, Task, Workflow, ToolSearch, EnterWorktree, ExitWorktree, TodoWrite
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent, Task, ToolSearch, EnterWorktree, ExitWorktree, TodoWrite
 ---
 
 # Updraft: build
@@ -69,6 +69,6 @@ Per common: Finish (S7). Then emit the result block.
 | Re-review set | the full panel, on the whole spec | the lenses that failed, plus every core lens |
 | Prompt doc fields | `spec_doc=…, plan_doc=…` | `spec_doc=…, plan_doc=…` |
 | Advance to | S4 | S7 |
-| Freeze line | `S3 panel: core=[…] +optional=[…] transport=Workflow` | `S6 panel: core=[…] +optional=[…] verification=<local\|ci> transport=Workflow` |
+| Freeze line | `S3 panel: core=[…] +optional=[…]` | `S6 panel: core=[…] +optional=[…] verification=<local\|ci>` |
 
 - Change a cap only when the requirement says so, and only for this run.

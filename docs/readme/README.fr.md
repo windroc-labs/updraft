@@ -209,16 +209,8 @@ chaque reviewer tourne en tant que `updraft:<name>` avec le `model:` et l'`effor
 Codex, il hérite du modèle de la session. Une lens relue repart de zéro avec ses éléments précédents et, en S6,
 le diff de la correction.
 
-### Plugin workflow (`workflows/review-round.js`)
-
-Le transport par défaut d'un round, `Workflow({name: "updraft:updraft-review-round", args})`, lance tous
-les membres en parallèle et valide chaque verdict par un schema. Sans Workflow, les skills lancent les reviewers
-nativement.
-
-- Entrée `args` : `{phase, members: [{agent, subagent_type, prompt}]}`.
-- Sortie : `{phase, verdicts: [{agent, VERDICT, BLOCKING, NON_BLOCKING, synthetic}]}`, dans l'ordre des membres.
-  `VERDICT` vaut `PASS` seulement si le reviewer a dit `PASS` sans aucun `BLOCKING`. Un membre sans verdict
-  devient `FAIL` avec `synthetic: true` ; les skills le relancent une fois nativement.
+Chaque round lance tous les membres dans un seul lot parallèle de nouveaux subagents,
+en mettant les autres en attente lorsque la limite de concurrence de l'hôte est atteinte.
 
 ## Développement local
 
@@ -261,8 +253,6 @@ updraft/
 │   ├── resolve-branch.py         # S1: resume / stay / reuse / create / stop
 │   ├── _frontmatter.py           # parser shared by the selector and the roster lint
 │   └── lint-roster.py            # roster lint
-├── workflows/
-│   └── review-round.js           # plugin workflow: one parallel review round
 ├── agents/                       # review roster
 │   ├── reviewer-contract.md      # authoring template, inlined into ordinary reviewers
 │   └── *-reviewer.md             # one lens each

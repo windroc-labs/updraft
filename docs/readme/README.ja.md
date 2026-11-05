@@ -191,15 +191,7 @@ run はこれと `git log` から復元します。同じ requirement をもう�
 各 reviewer は `updraft:<name>` として、frontmatter の `model:` と `effort:` で実行されます。Codex ではセッションのモデルを引き継ぎます。
 re-review される lens は、前回のレビュー項目と（S6 では）修正の diff を持って新たに始まります。
 
-### Plugin workflow（`workflows/review-round.js`）
-
-1 ラウンドのデフォルトのトランスポート `Workflow({name: "updraft:updraft-review-round", args})` は、全メンバーを並列に実行し、
-各 verdict をスキーマで検証します。Workflow がなければ、skill はネイティブに送り出します。
-
-- 入力 `args`: `{phase, members: [{agent, subagent_type, prompt}]}`。
-- 出力: `{phase, verdicts: [{agent, VERDICT, BLOCKING, NON_BLOCKING, synthetic}]}`（メンバー順）。`VERDICT` が `PASS` になるのは、
-  reviewer が `PASS` と答え、`BLOCKING` がないときだけです。verdict を返さなかったメンバーは `synthetic: true` 付きの `FAIL` になり、
-  skill がネイティブに 1 回だけ再送します。
+各ラウンドでは、全メンバーを新しい通常の subagent として 1 つのバッチで並列に送り出し、ホストの同時実行上限に達したら残りをキューに入れます。
 
 ## ローカル開発
 
@@ -242,8 +234,6 @@ updraft/
 │   ├── resolve-branch.py         # S1: resume / stay / reuse / create / stop
 │   ├── _frontmatter.py           # parser shared by the selector and the roster lint
 │   └── lint-roster.py            # roster lint
-├── workflows/
-│   └── review-round.js           # plugin workflow: one parallel review round
 ├── agents/                       # review roster
 │   ├── reviewer-contract.md      # authoring template, inlined into ordinary reviewers
 │   └── *-reviewer.md             # one lens each

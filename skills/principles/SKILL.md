@@ -6,9 +6,7 @@ description: "Use to find and read, by name, one of pstack's 24 engineering prin
 # Updraft: principles
 
 pstack's 24 engineering principles and its unslop writing method ship in this plugin as
-skills, copied verbatim from upstream; provenance and license:
-[`THIRD_PARTY_NOTICES.md`](../../THIRD_PARTY_NOTICES.md). Neither host lists them to the
-model, so find them here. Read a file at its path below, relative to this skill's
+skills. Neither host lists them to the model, so find them here. Read a file at its path below, relative to this skill's
 directory: Claude Code shows that directory as "Base directory for this skill", and Codex
 lists this file's path. A user can also invoke one by its skill name, the directory in its
 path, such as `/updraft:principle-fix-root-causes` in Claude Code.

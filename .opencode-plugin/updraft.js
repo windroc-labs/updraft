@@ -112,21 +112,17 @@ function addAgents(config, subagents) {
   config.agent = merged;
 }
 
-// Deny the skill tool each named skill. OpenCode applies the last matching rule, so these
-// rules go after the user's `*` and before the user's other patterns, which then win. A single
-// action for every permission (`"permission": "allow"`) is the user's call and stays as it is.
+// Deny the skill tool each named skill the user's rules do not name. OpenCode applies the last
+// matching rule, so the denies go right after the user's `*` (first without one) and the user's
+// rules keep their order. A string is OpenCode's shorthand for `{"*": <action>}`.
 function denySkills(config, names) {
-  if (!names.length || typeof config.permission === "string") return;
-  const permission = (config.permission ??= {});
-  const user = typeof permission.skill === "string" ? { "*": permission.skill } : { ...permission.skill };
-  const rules = "*" in user ? { "*": user["*"] } : {};
-  for (const name of names) rules[name] = "deny";
-  for (const [pattern, action] of Object.entries(user)) {
-    if (pattern === "*") continue;
-    delete rules[pattern];
-    rules[pattern] = action;
-  }
-  permission.skill = rules;
+  if (!names.length) return;
+  const rules = (value) => (typeof value === "string" ? { "*": value } : { ...value });
+  config.permission = rules(config.permission);
+  const user = Object.entries(rules(config.permission.skill));
+  const at = user.findIndex(([pattern]) => pattern === "*") + 1;
+  const denies = names.filter((name) => !user.some(([pattern]) => pattern === name)).map((name) => [name, "deny"]);
+  config.permission.skill = Object.fromEntries([...user.slice(0, at), ...denies, ...user.slice(at)]);
 }
 
 export const Updraft = async () => {

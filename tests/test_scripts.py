@@ -2168,7 +2168,7 @@ class OpenCodePluginTests(unittest.TestCase):
             "command": {"updraft:build": mine, "other": mine},
             "agent": {"updraft:doc-reviewer": {"model": "p/m", "permission": {"bash": "ask", "edit": "ask"}},
                       "mine": {"prompt": "mine"}},
-            "permission": {"bash": "ask", "skill": {"*": "ask", "principle-*": "allow", "unslop": "allow"}},
+            "permission": {"bash": "ask", "skill": {"unslop": "allow", "*": "ask", "principle-*": "allow"}},
         })
         self.assertEqual(config["skills"], {"paths": ["/elsewhere", SKILLS]})
         self.assertEqual(config["command"]["updraft:build"], mine)
@@ -2182,20 +2182,26 @@ class OpenCodePluginTests(unittest.TestCase):
                          ("ask", "ask", "deny"))
         self.assertEqual(config["agent"]["mine"], {"prompt": "mine"})
         self.assertEqual(config["permission"]["bash"], "ask")
-        # OpenCode applies the last matching rule: the user's `*` first, the user's other patterns last.
+        # OpenCode applies the last matching rule: the user's rules keep their order, the denies
+        # go right after the user's `*`, and a skill the user names gets no deny.
         rules = list(config["permission"]["skill"].items())
-        self.assertEqual(rules[0], ("*", "ask"))
-        self.assertEqual(rules[-2:], [("principle-*", "allow"), ("unslop", "allow")])
-        self.assertIn(("to-tickets", "deny"), rules)
-        self.assertIn(("principle-fix-root-causes", "deny"), rules)
+        self.assertEqual(rules[:2], [("unslop", "allow"), ("*", "ask")])
+        self.assertEqual(rules[-1], ("principle-*", "allow"))
+        self.assertEqual(rules.count(("unslop", "allow")), 1)
+        self.assertNotIn(("unslop", "deny"), rules)
+        self.assertIn(("to-tickets", "deny"), rules[2:-1])
+        self.assertIn(("principle-fix-root-causes", "deny"), rules[2:-1])
 
     def test_array_skills_and_string_permissions(self):
         config = self.configure({"skills": ["/elsewhere"], "permission": {"skill": "ask"}})
         self.assertEqual(config["skills"], ["/elsewhere", SKILLS])
-        self.assertEqual(config["permission"]["skill"]["*"], "ask")
+        self.assertEqual(list(config["permission"]["skill"].items())[0], ("*", "ask"))
         self.assertEqual(config["permission"]["skill"]["unslop"], "deny")
-        # A single action for every permission is the user's call: no per-skill rules are added.
-        self.assertEqual(self.configure({"permission": "allow"})["permission"], "allow")
+        # A string permission is OpenCode's shorthand for {"*": <action>}.
+        permission = self.configure({"permission": "allow"})["permission"]
+        self.assertEqual(list(permission)[0], "*")
+        self.assertEqual(permission["*"], "allow")
+        self.assertEqual(permission["skill"]["unslop"], "deny")
 
     def test_frontmatter_forms(self):
         skills = {

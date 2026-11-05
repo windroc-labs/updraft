@@ -2043,6 +2043,66 @@ class StandaloneSkillTests(unittest.TestCase):
             self.assertIn("../../references/review-round.md", self.read("skills", skill, "SKILL.md"), skill)
 
 
+class PstackLibraryTests(unittest.TestCase):
+    """The vendored pstack skills ship with their notice, stay out of implicit invocation on
+    both hosts, and the `principles` skill indexes each one by name."""
+
+    INDEX = os.path.join(SKILLS, "principles", "SKILL.md")
+
+    def read(self, path):
+        with open(path, encoding="utf-8") as fh:
+            return fh.read()
+
+    def frontmatter(self, path):
+        text = self.read(path)
+        self.assertTrue(text.startswith("---\n"), path)
+        return text.split("\n---\n", 1)[0]
+
+    def pstack_dirs(self):
+        return sorted(d for d in os.listdir(SKILLS) if d.startswith("principle-")) + ["unslop"]
+
+    def gated_dirs(self):
+        return sorted(d for d in os.listdir(SKILLS)
+                      if os.path.isfile(os.path.join(SKILLS, d, "agents", "openai.yaml")))
+
+    def notice_dirs(self):
+        rows = re.findall(r"(?m)^\| `skills/([\w-]+)/SKILL\.md` \| `pstack/skills/([\w-]+)/SKILL\.md` \|$",
+                          self.read(os.path.join(REPO, "THIRD_PARTY_NOTICES.md")))
+        for ours, upstream in rows:
+            self.assertEqual(ours, upstream)
+        return sorted(ours for ours, _ in rows)
+
+    def index_dirs(self):
+        return sorted(re.findall(r"`\.\./([\w-]+)/SKILL\.md`", self.read(self.INDEX)))
+
+    def test_notice_index_and_gates_cover_exactly_the_pstack_set(self):
+        pstack = self.pstack_dirs()
+        self.assertEqual(len(pstack), 25)
+        self.assertEqual(self.notice_dirs(), sorted(pstack))
+        self.assertEqual(self.index_dirs(), sorted(pstack))
+        self.assertEqual(self.gated_dirs(), sorted(pstack))
+
+    def test_index_paths_resolve_to_the_named_skill(self):
+        for d in self.index_dirs():
+            with self.subTest(skill=d):
+                path = os.path.join(SKILLS, "principles", "..", d, "SKILL.md")
+                self.assertIn("\nname: %s\n" % d, self.frontmatter(path) + "\n")
+
+    def test_pstack_skills_are_explicit_only_on_both_hosts(self):
+        for d in self.pstack_dirs():
+            with self.subTest(skill=d):
+                self.assertIn("\ndisable-model-invocation: true\n", self.frontmatter(os.path.join(SKILLS, d, "SKILL.md")) + "\n")
+                sidecar = self.read(os.path.join(SKILLS, d, "agents", "openai.yaml"))
+                self.assertRegex(sidecar, r"(?m)^policy:\n  allow_implicit_invocation: false$")
+
+    def test_index_is_model_invocable(self):
+        fm = self.frontmatter(self.INDEX) + "\n"
+        self.assertIn("\nname: principles\n", fm)
+        self.assertIn("\ndescription: ", fm)
+        self.assertNotIn("disable-model-invocation", fm)
+        self.assertFalse(os.path.exists(os.path.join(SKILLS, "principles", "agents", "openai.yaml")))
+
+
 class CodeownersTests(unittest.TestCase):
     """.github/CODEOWNERS gives @windroc existing, root-anchored paths, the required ones included."""
 

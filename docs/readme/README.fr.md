@@ -67,6 +67,14 @@ valident ou jusqu'à 3 rounds, avec ou sans dépôt git ; `lenses=<dir>` substit
 recueille des choix indépendants face à une bifurcation : 2 à 4 subagents tout neufs ne voient que la question,
 le requirement, les documents qu'il cite et le code en lecture seule.
 
+Le plugin embarque aussi, tels quels, les 24 principes d'ingénierie de
+[pstack](https://github.com/cursor/plugins/tree/main/pstack) et sa méthode d'écriture
+unslop, sous `skills/principle-<name>/` et `skills/unslop/`. Leur provenance et leur notice
+de licence MIT sont dans [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md). Aucun hôte
+ne les montre de lui-même au modèle : un worker invoque `updraft:principles`, qui liste
+chaque nom avec son fichier, puis lit ce fichier. Vous pouvez aussi en lancer un par son
+nom, par exemple `/updraft:principle-fix-root-causes`.
+
 ## Déroulement d'une run
 
 ```mermaid
@@ -239,7 +247,10 @@ updraft/
 │   ├── build/scripts/check-spec.py     # S2 spec structure and AC coverage
 │   ├── light-build/SKILL.md      # /updraft:light-build
 │   ├── review/SKILL.md           # /updraft:review: review one document
-│   └── council/SKILL.md          # /updraft:council: independent picks at a fork
+│   ├── council/SKILL.md          # /updraft:council: independent picks at a fork
+│   ├── principles/SKILL.md       # /updraft:principles: index of the pstack skills below
+│   ├── principle-<name>/         # 24 pstack principles: verbatim SKILL.md + our agents/openai.yaml
+│   └── unslop/                   # pstack unslop: verbatim SKILL.md + our agents/openai.yaml
 ├── references/
 │   ├── updraft-common.md         # run rules build and light-build share
 │   └── review-round.md           # how a review round runs and loops
@@ -258,5 +269,6 @@ updraft/
 ├── tests/
 │   └── test_scripts.py           # stdlib unittest for the scripts
 ├── AGENTS.md                     # contributor guidance for Claude Code and Codex
+├── THIRD_PARTY_NOTICES.md        # pstack provenance and MIT license
 └── README.md
 ```

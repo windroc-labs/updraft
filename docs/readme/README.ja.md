@@ -64,6 +64,11 @@ light-build はスコープを制限しません。渡されたものは何で�
 修正します。git リポジトリの有無は問いません。`lenses=<dir>` で独自の reviewer に差し替えられます。`council` は分岐点で
 独立した選択を集めます: 2〜4 体の新しい subagent が見るのは、質問、requirement、そこで挙げられたドキュメント、読み取り専用のコードだけです。
 
+プラグインには [pstack](https://github.com/cursor/plugins/tree/main/pstack) の 24 個のエンジニアリング原則と unslop ライティング手法も、そのまま `skills/principle-<name>/` と
+`skills/unslop/` として同梱されています。出典と MIT ライセンス表記は [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md) にあります。
+どちらのホストもこれらを自動ではモデルに見せません。worker は `updraft:principles` を呼び出して各名前とファイルの一覧を得て、
+そのファイルを読みます。`/updraft:principle-fix-root-causes` のように名前で直接実行することもできます。
+
 ## run の流れ
 
 ```mermaid
@@ -223,7 +228,10 @@ updraft/
 │   ├── build/scripts/check-spec.py     # S2 spec structure and AC coverage
 │   ├── light-build/SKILL.md      # /updraft:light-build
 │   ├── review/SKILL.md           # /updraft:review: review one document
-│   └── council/SKILL.md          # /updraft:council: independent picks at a fork
+│   ├── council/SKILL.md          # /updraft:council: independent picks at a fork
+│   ├── principles/SKILL.md       # /updraft:principles: index of the pstack skills below
+│   ├── principle-<name>/         # 24 pstack principles: verbatim SKILL.md + our agents/openai.yaml
+│   └── unslop/                   # pstack unslop: verbatim SKILL.md + our agents/openai.yaml
 ├── references/
 │   ├── updraft-common.md         # run rules build and light-build share
 │   └── review-round.md           # how a review round runs and loops
@@ -242,5 +250,6 @@ updraft/
 ├── tests/
 │   └── test_scripts.py           # stdlib unittest for the scripts
 ├── AGENTS.md                     # contributor guidance for Claude Code and Codex
+├── THIRD_PARTY_NOTICES.md        # pstack provenance and MIT license
 └── README.md
 ```

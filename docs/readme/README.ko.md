@@ -64,6 +64,11 @@ light-build는 범위를 제한하지 않습니다. 주는 것은 무엇이든 �
 git 저장소가 있든 없든 동작합니다. `lenses=<dir>`로 여러분의 reviewer로 바꿀 수 있습니다. `council`은 갈림길에서 독립적인
 선택을 받습니다: 새로 띄운 2–4개의 subagent는 질문, requirement, 거기에 언급된 문서, 읽기 전용 코드만 봅니다.
 
+플러그인에는 [pstack](https://github.com/cursor/plugins/tree/main/pstack)의 엔지니어링 원칙 24개와 unslop 글쓰기 방법도 원문 그대로 `skills/principle-<name>/`과
+`skills/unslop/`에 들어 있습니다. 출처와 MIT 라이선스 고지는 [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md)에 있습니다.
+두 호스트 모두 이를 모델에 스스로 보여 주지 않습니다. worker는 `updraft:principles`를 호출해 각 이름과 파일 목록을 받은 뒤
+그 파일을 읽습니다. `/updraft:principle-fix-root-causes`처럼 이름으로 직접 실행할 수도 있습니다.
+
 ## run의 진행 방식
 
 ```mermaid
@@ -221,7 +226,10 @@ updraft/
 │   ├── build/scripts/check-spec.py     # S2 spec structure and AC coverage
 │   ├── light-build/SKILL.md      # /updraft:light-build
 │   ├── review/SKILL.md           # /updraft:review: review one document
-│   └── council/SKILL.md          # /updraft:council: independent picks at a fork
+│   ├── council/SKILL.md          # /updraft:council: independent picks at a fork
+│   ├── principles/SKILL.md       # /updraft:principles: index of the pstack skills below
+│   ├── principle-<name>/         # 24 pstack principles: verbatim SKILL.md + our agents/openai.yaml
+│   └── unslop/                   # pstack unslop: verbatim SKILL.md + our agents/openai.yaml
 ├── references/
 │   ├── updraft-common.md         # run rules build and light-build share
 │   └── review-round.md           # how a review round runs and loops
@@ -240,5 +248,6 @@ updraft/
 ├── tests/
 │   └── test_scripts.py           # stdlib unittest for the scripts
 ├── AGENTS.md                     # contributor guidance for Claude Code and Codex
+├── THIRD_PARTY_NOTICES.md        # pstack provenance and MIT license
 └── README.md
 ```

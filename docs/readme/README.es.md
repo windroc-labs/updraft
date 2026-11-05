@@ -67,6 +67,14 @@ aprueban o se llega a 3 rondas, con o sin repositorio git; `lenses=<dir>` pone t
 `council` recoge elecciones independientes ante una bifurcación: 2–4 subagents nuevos ven solo la pregunta,
 el requirement, los documentos que menciona y el código en solo lectura.
 
+El plugin también incluye, sin cambios, los 24 principios de ingeniería de
+[pstack](https://github.com/cursor/plugins/tree/main/pstack) y su método de escritura
+unslop, como `skills/principle-<name>/` y `skills/unslop/`. Su procedencia y su aviso de
+licencia MIT están en [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md). Ningún host se
+los muestra al modelo por sí solo: un worker invoca `updraft:principles`, que lista cada
+nombre con su archivo, y luego lee ese archivo. También puedes ejecutar uno por su nombre,
+como `/updraft:principle-fix-root-causes`.
+
 ## Cómo funciona una run
 
 ```mermaid
@@ -238,7 +246,10 @@ updraft/
 │   ├── build/scripts/check-spec.py     # S2 spec structure and AC coverage
 │   ├── light-build/SKILL.md      # /updraft:light-build
 │   ├── review/SKILL.md           # /updraft:review: review one document
-│   └── council/SKILL.md          # /updraft:council: independent picks at a fork
+│   ├── council/SKILL.md          # /updraft:council: independent picks at a fork
+│   ├── principles/SKILL.md       # /updraft:principles: index of the pstack skills below
+│   ├── principle-<name>/         # 24 pstack principles: verbatim SKILL.md + our agents/openai.yaml
+│   └── unslop/                   # pstack unslop: verbatim SKILL.md + our agents/openai.yaml
 ├── references/
 │   ├── updraft-common.md         # run rules build and light-build share
 │   └── review-round.md           # how a review round runs and loops
@@ -257,5 +268,6 @@ updraft/
 ├── tests/
 │   └── test_scripts.py           # stdlib unittest for the scripts
 ├── AGENTS.md                     # contributor guidance for Claude Code and Codex
+├── THIRD_PARTY_NOTICES.md        # pstack provenance and MIT license
 └── README.md
 ```

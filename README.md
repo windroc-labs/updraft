@@ -6,7 +6,7 @@ English · [中文](docs/readme/README.zh-CN.md) · [日本語](docs/readme/READ
 
 </div>
 
-A Claude Code and Codex plugin that turns one requirement into a review-ready git branch
+A Claude Code, Codex and OpenCode plugin that turns one requirement into a review-ready git branch
 without asking you anything. It writes the work itself (code, docs, designs, data, plans),
 independent reviewer agents judge it, and it fixes until they all pass. It never merges.
 
@@ -29,6 +29,18 @@ Releases use explicit semver (currently `0.1.0`). To update, run
 requirement, or ask Codex to run a checkout's absolute `skills/build/SKILL.md` or
 `skills/light-build/SKILL.md`. Needs subagent support. Reviewers inherit the session
 model. No Codex marketplace manifest yet.
+
+**OpenCode.** Install it as a plugin from GitHub, pinned to a branch, tag or commit:
+
+```
+opencode plugin -g updraft@git+https://github.com/windroc-labs/updraft.git#<ref>
+```
+
+This adds it to the global `opencode.json` `plugin` list (`-f` replaces an installed
+version). The plugin registers the skills, each as `/updraft:<skill>`, and the reviewers as
+`updraft:<name>` subagents that use the session model. Skills marked
+`disable-model-invocation` are denied to the skill tool. Settings you already have for
+those names win.
 
 ## Use
 
@@ -213,8 +225,8 @@ reviewers are read-only and never run the full suite.
 (`lens`, `phase`, `tier`, `applies_to`), so a new lens is a new file. Both run every core
 lens and drop a marginal optional one only with a logged reason. `review` also takes an
 outside folder of reviewers written to `reviewer-contract.md`; they run as generic agents. On Claude Code each
-reviewer runs as `updraft:<name>` with its frontmatter `model:` and `effort:`; on Codex
-it inherits the session model. A re-reviewed lens starts fresh with its prior items and,
+reviewer runs as `updraft:<name>` with its frontmatter `model:` and `effort:`; on OpenCode
+it runs as `updraft:<name>` on the session model; on Codex it inherits the session model. A re-reviewed lens starts fresh with its prior items and,
 in S6, the fix diff.
 
 Each round dispatches all members as one parallel batch of fresh subagents, queueing
@@ -227,8 +239,11 @@ claude --plugin-dir /path/to/updraft                       # load the working co
 /reload-plugins                                            # after an edit, in session
 claude plugin validate /path/to/updraft --strict           # manifests and frontmatter
 python3 scripts/lint-roster.py                             # after editing agents/
-python3 tests/test_scripts.py                              # helper-script tests, stdlib only
+python3 tests/test_scripts.py                              # helper tests, stdlib only (plugin tests need node)
 ```
+
+In OpenCode, load the working copy with
+`"plugin": ["file:///path/to/updraft/.opencode-plugin/updraft.js"]` in `opencode.json`.
 
 Also run the [smoke protocol](CONTRIBUTING.md#smoke-protocol). Per-build dev docs go in
 gitignored `dev-docs/<date>-<slug>-{spec,plan}.md`.
@@ -241,6 +256,9 @@ updraft/
 │   └── plugin.json               # name: updraft (version 0.1.0)
 ├── .codex-plugin/
 │   └── plugin.json               # Codex manifest: same name and version
+├── package.json                  # OpenCode package: same name and version
+├── .opencode-plugin/
+│   └── updraft.js                # OpenCode plugin: skills, /updraft:<skill>, reviewer subagents
 ├── skills/
 │   ├── build/SKILL.md            # /updraft:build
 │   ├── build/spec.md             # spec-writing guide for S2

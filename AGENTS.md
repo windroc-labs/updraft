@@ -4,10 +4,11 @@ This file provides repository guidance to Claude Code and Codex.
 
 ## What this is
 
-Updraft is a **Claude Code and Codex plugin** that packages an autonomous
+Updraft is a **Claude Code, Codex and OpenCode plugin** that packages an autonomous
 build / light-build pipeline driven by a committed roster of named
 review agents. The repo is the plugin only; it is installed from the shared `windroc`
-marketplace in `windroc-labs/agent-plugins-marketplace`. The "product" is the plugin's prompts/agents/scripts,
+marketplace in `windroc-labs/agent-plugins-marketplace`; OpenCode installs it from this repo
+(`package.json` + `.opencode-plugin/updraft.js`). Keep the three manifests' versions equal. The "product" is the plugin's prompts/agents/scripts,
 not an application — there is nothing to compile or run as a server.
 
 ## Commands
@@ -35,6 +36,7 @@ There is no build step. `tests/test_scripts.py` exercises `scripts/select-panel.
 `skills/build/scripts/check-spec.py`, `scripts/ci-verdict.py` and `scripts/pr.py` (against a fake `gh` on `PATH`),
 `scripts/resolve-branch.py` (on temp git repos) and `scripts/lint-roster.py` as CLIs via subprocess (they have hyphenated names,
 so they're not importable — the CLI is the contract).
+It also runs `.opencode-plugin/updraft.js`'s config hook under `node` (skipped without `node`).
 
 ## Architecture (the big picture)
 

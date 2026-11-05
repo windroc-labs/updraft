@@ -6,6 +6,8 @@ The 24 `skills/principle-<name>/SKILL.md` files and `skills/unslop/SKILL.md` are
 copies, frontmatter included, from [pstack](https://github.com/cursor/plugins/tree/c742dd61706fbacc1b95f1a20b7b988cf096ce6c/pstack)
 in [cursor/plugins](https://github.com/cursor/plugins) at commit `c742dd61706fbacc1b95f1a20b7b988cf096ce6c`. Each upstream skill
 directory holds only its `SKILL.md`. Edit none of them; re-copy from upstream instead.
+Ours, not upstream's: each of those directories' `agents/openai.yaml` (keeps the skill out of
+Codex's implicit invocation) and the `skills/principles/` index.
 
 | updraft path | upstream path |
 | --- | --- |

@@ -1955,10 +1955,6 @@ class PstackLibraryTests(unittest.TestCase):
     def pstack_dirs(self):
         return sorted(d for d in os.listdir(SKILLS) if d.startswith("principle-")) + ["unslop"]
 
-    def gated_dirs(self):
-        return sorted(d for d in os.listdir(SKILLS)
-                      if os.path.isfile(os.path.join(SKILLS, d, "agents", "openai.yaml")))
-
     def notice_dirs(self):
         rows = re.findall(r"(?m)^\| `skills/([\w-]+)/SKILL\.md` \| `pstack/skills/([\w-]+)/SKILL\.md` \|$",
                           self.read(os.path.join(REPO, "THIRD_PARTY_NOTICES.md")))
@@ -1969,12 +1965,11 @@ class PstackLibraryTests(unittest.TestCase):
     def index_dirs(self):
         return sorted(re.findall(r"`\.\./([\w-]+)/SKILL\.md`", self.read(self.INDEX)))
 
-    def test_notice_index_and_gates_cover_exactly_the_pstack_set(self):
+    def test_notice_and_index_cover_exactly_the_pstack_set(self):
         pstack = self.pstack_dirs()
         self.assertEqual(len(pstack), 25)
         self.assertEqual(self.notice_dirs(), sorted(pstack))
         self.assertEqual(self.index_dirs(), sorted(pstack))
-        self.assertEqual(self.gated_dirs(), sorted(pstack))
 
     def test_index_paths_resolve_to_the_named_skill(self):
         for d in self.index_dirs():
@@ -1995,6 +1990,44 @@ class PstackLibraryTests(unittest.TestCase):
         self.assertIn("\ndescription: ", fm)
         self.assertNotIn("disable-model-invocation", fm)
         self.assertFalse(os.path.exists(os.path.join(SKILLS, "principles", "agents", "openai.yaml")))
+
+
+class VendoredSkillTests(unittest.TestCase):
+    """Every skill is model-invocable on both hosts or on neither, and the vendored
+    grilling and to-tickets skills ship with their notice, which alone names their origin."""
+
+    read = PstackLibraryTests.read
+    frontmatter = PstackLibraryTests.frontmatter
+
+    def test_codex_gate_mirrors_claude_frontmatter_for_every_skill(self):
+        for d in sorted(os.listdir(SKILLS)):
+            with self.subTest(skill=d):
+                hidden_on_claude = "\ndisable-model-invocation: true\n" in self.frontmatter(
+                    os.path.join(SKILLS, d, "SKILL.md")) + "\n"
+                sidecar = os.path.join(SKILLS, d, "agents", "openai.yaml")
+                hidden_on_codex = os.path.isfile(sidecar) and re.search(
+                    r"(?m)^policy:\n  allow_implicit_invocation: false$", self.read(sidecar)) is not None
+                self.assertEqual(hidden_on_codex, hidden_on_claude)
+
+    def test_notice_covers_exactly_grilling_and_to_tickets(self):
+        rows = re.findall(r"(?m)^\| `skills/([\w-]+)/SKILL\.md` \| `skills/(?:engineering|productivity)/([\w-]+)/SKILL\.md` \|$",
+                          self.read(os.path.join(REPO, "THIRD_PARTY_NOTICES.md")))
+        self.assertEqual(sorted(ours for ours, _ in rows), ["grilling", "to-tickets"])
+        for ours, upstream in rows:
+            with self.subTest(skill=ours):
+                self.assertEqual(ours, upstream)
+                self.assertIn("\nname: %s\n" % ours, self.frontmatter(os.path.join(SKILLS, ours, "SKILL.md")) + "\n")
+
+    def test_origin_is_named_only_in_the_notice(self):
+        docs = [os.path.join(REPO, "README.md"), os.path.join(REPO, "AGENTS.md")]
+        docs += [os.path.join(REPO, "docs", "readme", f) for f in os.listdir(os.path.join(REPO, "docs", "readme"))]
+        docs += [os.path.join(root, f) for root, _, files in os.walk(SKILLS) for f in files
+                 if f.endswith((".md", ".yaml"))]
+        for path in docs:
+            with self.subTest(path=os.path.relpath(path, REPO)):
+                text = self.read(path)
+                self.assertNotIn("mattpocock", text)
+                self.assertNotIn("Matt Pocock", text)
 
 
 class CodeownersTests(unittest.TestCase):

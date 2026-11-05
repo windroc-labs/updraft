@@ -65,6 +65,11 @@ light-build 不把关范围，你给它什么它就做什么。选哪个 skill �
 有没有 git 仓库都可以；`lenses=<dir>` 可换成你自己的 reviewer。`council` 在岔路口获取独立选择：
 2–4 个全新的 subagent 只看到问题、requirement、其中提到的文档以及只读的代码。
 
+插件还原样收录了 [pstack](https://github.com/cursor/plugins/tree/main/pstack) 的 24 条工程原则和它的 unslop 写作方法，位于 `skills/principle-<name>/` 和 `skills/unslop/`；
+出处和 MIT 许可声明见 [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md)。两个宿主都不会主动把它们展示给模型：
+worker 调用 `updraft:principles`，它列出每个名称及其文件，worker 再读取该文件。
+你也可以按名称直接运行其中一个，例如 `/updraft:principle-fix-root-causes`。
+
 ## 一次 run 如何进行
 
 ```mermaid
@@ -226,7 +231,10 @@ updraft/
 │   ├── build/scripts/check-spec.py     # S2 spec structure and AC coverage
 │   ├── light-build/SKILL.md      # /updraft:light-build
 │   ├── review/SKILL.md           # /updraft:review: review one document
-│   └── council/SKILL.md          # /updraft:council: independent picks at a fork
+│   ├── council/SKILL.md          # /updraft:council: independent picks at a fork
+│   ├── principles/SKILL.md       # /updraft:principles: index of the pstack skills below
+│   ├── principle-<name>/         # 24 pstack principles: verbatim SKILL.md + our agents/openai.yaml
+│   └── unslop/                   # pstack unslop: verbatim SKILL.md + our agents/openai.yaml
 ├── references/
 │   ├── updraft-common.md         # run rules build and light-build share
 │   └── review-round.md           # how a review round runs and loops
@@ -245,5 +253,6 @@ updraft/
 ├── tests/
 │   └── test_scripts.py           # stdlib unittest for the scripts
 ├── AGENTS.md                     # contributor guidance for Claude Code and Codex
+├── THIRD_PARTY_NOTICES.md        # pstack provenance and MIT license
 └── README.md
 ```

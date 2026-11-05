@@ -102,6 +102,14 @@ and review settings. Understanding the system means reading those four files plu
   subagents, the caller's pick logged before and the tally after. build and light-build run
   it and decide everything themselves; another caller may hand an author's call back.
 
+- **Vendored pstack skills (`skills/principle-<name>/`, `skills/unslop/`).** Verbatim copies
+  of pstack's 24 principles and unslop; never edit them, re-copy from upstream
+  (`THIRD_PARTY_NOTICES.md` names the commit and paths and holds the license). Each
+  directory's `agents/openai.yaml` is ours and keeps Codex from listing the skill to the model;
+  their `disable-model-invocation: true` does the same on Claude. Workers find them by name
+  through `skills/principles/SKILL.md`, the model-invocable index. `PstackLibraryTests` keeps
+  the notice table, the index and the gates listing the same set.
+
 - **Selection stage (`scripts/select-panel.py`).** Deterministic, stdlib-only router:
   `(phase, signals) → JSON panel` of `{agent, subagent_type, file, tier, matched}`; `file`
   lets a caller give a reviewer from an outside `--agents-dir` to a generic agent. Every

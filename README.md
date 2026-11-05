@@ -67,6 +67,13 @@ reviewers pass or 3 rounds, with or without a git repo; `lenses=<dir>` swaps in 
 reviewers. `council` gets independent picks at a fork: 2–4 fresh subagents see only the
 question, the requirement, the documents it names and read-only code.
 
+The plugin also ships [pstack](https://github.com/cursor/plugins/tree/main/pstack)'s 24
+engineering principles and its unslop writing method, verbatim, as
+`skills/principle-<name>/` and `skills/unslop/`. Their provenance and MIT notice are in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Neither host shows them to the model on
+its own: a worker invokes `updraft:principles`, which lists each name with its file, then
+reads that file. You can also run one by name, such as `/updraft:principle-fix-root-causes`.
+
 ## How a run works
 
 ```mermaid
@@ -243,7 +250,10 @@ updraft/
 │   ├── build/scripts/check-spec.py     # S2 spec structure and AC coverage
 │   ├── light-build/SKILL.md      # /updraft:light-build
 │   ├── review/SKILL.md           # /updraft:review: review one document
-│   └── council/SKILL.md          # /updraft:council: independent picks at a fork
+│   ├── council/SKILL.md          # /updraft:council: independent picks at a fork
+│   ├── principles/SKILL.md       # /updraft:principles: index of the pstack skills below
+│   ├── principle-<name>/         # 24 pstack principles: verbatim SKILL.md + our agents/openai.yaml
+│   └── unslop/                   # pstack unslop: verbatim SKILL.md + our agents/openai.yaml
 ├── references/
 │   ├── updraft-common.md         # run rules build and light-build share
 │   └── review-round.md           # how a review round runs and loops
@@ -262,5 +272,6 @@ updraft/
 ├── tests/
 │   └── test_scripts.py           # stdlib unittest for the scripts
 ├── AGENTS.md                     # contributor guidance for Claude Code and Codex
+├── THIRD_PARTY_NOTICES.md        # pstack provenance and MIT license
 └── README.md
 ```

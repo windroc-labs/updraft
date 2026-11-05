@@ -1999,8 +1999,17 @@ class VendoredSkillTests(unittest.TestCase):
     read = PstackLibraryTests.read
     frontmatter = PstackLibraryTests.frontmatter
 
+    NOTICE = os.path.join(REPO, "THIRD_PARTY_NOTICES.md")
+
+    def section(self):
+        """The notice section that lists skills/grilling/SKILL.md."""
+        return next(s for s in self.read(self.NOTICE).split("\n## ") if "| `skills/grilling/SKILL.md` |" in s)
+
+    def rows(self):
+        return re.findall(r"(?m)^\| `skills/([\w-]+)/SKILL\.md` \| `skills/([\w-]+)/([\w-]+)/SKILL\.md` \|$", self.section())
+
     def test_codex_gate_mirrors_claude_frontmatter_for_every_skill(self):
-        for d in sorted(os.listdir(SKILLS)):
+        for d in sorted(d for d in os.listdir(SKILLS) if os.path.isfile(os.path.join(SKILLS, d, "SKILL.md"))):
             with self.subTest(skill=d):
                 hidden_on_claude = "\ndisable-model-invocation: true\n" in self.frontmatter(
                     os.path.join(SKILLS, d, "SKILL.md")) + "\n"
@@ -2010,24 +2019,25 @@ class VendoredSkillTests(unittest.TestCase):
                 self.assertEqual(hidden_on_codex, hidden_on_claude)
 
     def test_notice_covers_exactly_grilling_and_to_tickets(self):
-        rows = re.findall(r"(?m)^\| `skills/([\w-]+)/SKILL\.md` \| `skills/(?:engineering|productivity)/([\w-]+)/SKILL\.md` \|$",
-                          self.read(os.path.join(REPO, "THIRD_PARTY_NOTICES.md")))
-        self.assertEqual(sorted(ours for ours, _ in rows), ["grilling", "to-tickets"])
-        for ours, upstream in rows:
+        self.assertEqual(sorted(self.rows()), [("grilling", "productivity", "grilling"),
+                                               ("to-tickets", "engineering", "to-tickets")])
+        for ours, _, _ in self.rows():
             with self.subTest(skill=ours):
-                self.assertEqual(ours, upstream)
                 self.assertIn("\nname: %s\n" % ours, self.frontmatter(os.path.join(SKILLS, ours, "SKILL.md")) + "\n")
 
     def test_origin_is_named_only_in_the_notice(self):
-        docs = [os.path.join(REPO, "README.md"), os.path.join(REPO, "AGENTS.md")]
-        docs += [os.path.join(REPO, "docs", "readme", f) for f in os.listdir(os.path.join(REPO, "docs", "readme"))]
-        docs += [os.path.join(root, f) for root, _, files in os.walk(SKILLS) for f in files
-                 if f.endswith((".md", ".yaml"))]
-        for path in docs:
-            with self.subTest(path=os.path.relpath(path, REPO)):
-                text = self.read(path)
-                self.assertNotIn("mattpocock", text)
-                self.assertNotIn("Matt Pocock", text)
+        section = self.section()
+        owner = section.split("/", 1)[0]
+        holder = re.search(r"(?m)^Copyright \(c\) \d{4} (.+)$", section).group(1)
+        names = {owner.lower(), holder.lower(), holder.lower().replace(" ", "-")}
+        exempt = {"THIRD_PARTY_NOTICES.md"} | {"skills/%s/SKILL.md" % ours for ours, _, _ in self.rows()}
+        tracked = subprocess.run(["git", "-C", REPO, "ls-files"], capture_output=True, text=True,
+                                 check=True).stdout.split()
+        for rel in sorted(set(tracked) - exempt):
+            with self.subTest(path=rel):
+                with open(os.path.join(REPO, rel), encoding="utf-8", errors="replace") as fh:
+                    text = fh.read().lower()
+                self.assertFalse([n for n in names if n in text])
 
 
 class CodeownersTests(unittest.TestCase):

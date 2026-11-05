@@ -116,7 +116,7 @@ and review settings. Understanding the system means reading those four files plu
   is ours; `grilling` has none, so the model may invoke it on both hosts.
   `VendoredSkillTests` keeps every skill's Codex gate matching its Claude
   `disable-model-invocation`, the notice table matching these two directories, and their
-  origin out of the READMEs, `AGENTS.md` and `skills/`.
+  origin, as the notice names it, out of every other tracked file but the two `SKILL.md` copies.
 
 - **Selection stage (`scripts/select-panel.py`).** Deterministic, stdlib-only router:
   `(phase, signals) → JSON panel` of `{agent, subagent_type, file, tier, matched}`; `file`

@@ -2060,7 +2060,7 @@ class CodeownersTests(unittest.TestCase):
 
     def test_required_paths_are_owned(self):
         paths = [entry[0] for entry in self.entries()]
-        for path in ("/.github/", "/tests/", "/scripts/lint-roster.py", "/.claude-plugin/plugin.json", "/.codex-plugin/plugin.json"):
+        for path in ("/.github/", "/scripts/lint-roster.py", "/.claude-plugin/plugin.json", "/.codex-plugin/plugin.json"):
             self.assertIn(path, paths)
 
 

@@ -38,9 +38,9 @@ opencode plugin -g updraft@git+https://github.com/windroc-labs/updraft.git#<ref>
 
 This adds it to the global `opencode.json` `plugin` list (`-f` replaces an installed
 version). The plugin registers the skills, each as `/updraft:<skill>`, and the reviewers as
-`updraft:<name>` subagents that use the session model. Skills marked
-`disable-model-invocation` are denied to the skill tool. Settings you already have for
-those names win.
+`updraft:<name>` subagents that use the session model and keep their reviewer's tool limits.
+Skills marked `disable-model-invocation` are denied to the skill tool. Your own settings
+win: a command or skill rule of the same name, and an agent's fields one by one.
 
 ## Use
 
@@ -253,7 +253,7 @@ Repo layout:
 ```
 updraft/
 ├── .claude-plugin/
-│   └── plugin.json               # name: updraft (version 0.1.0)
+│   └── plugin.json               # name: updraft (version 0.2.0)
 ├── .codex-plugin/
 │   └── plugin.json               # Codex manifest: same name and version
 ├── package.json                  # OpenCode package: same name and version

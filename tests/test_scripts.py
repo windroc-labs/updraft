@@ -2119,6 +2119,8 @@ class OpenCodePluginTests(unittest.TestCase):
             os.makedirs(os.path.join(tmp, "skills", name))
             write_raw(os.path.join(tmp, "skills", name), "SKILL.md", text)
         os.makedirs(os.path.join(tmp, "skills", "no-skill-file"))
+        if agents is None:
+            return tmp
         os.makedirs(os.path.join(tmp, "agents"))
         for name, text in agents.items():
             write_raw(os.path.join(tmp, "agents"), name + ".md", text)
@@ -2145,7 +2147,8 @@ class OpenCodePluginTests(unittest.TestCase):
         self.assertEqual(correctness["mode"], "subagent")
         self.assertEqual(correctness["description"], "Work-phase correctness reviewer (read-only): logic errors, edge "
                          "and boundary cases, error paths and failure modes. Returns the strict verdict grammar.")
-        self.assertEqual(correctness["permission"], {"edit": "deny", "task": "deny", "webfetch": "deny"})
+        self.assertEqual(correctness["permission"], dict.fromkeys(
+            ("edit", "task", "todowrite", "question", "webfetch", "websearch", "lsp", "skill"), "deny"))
         self.assertEqual(correctness["steps"], 60)
         self.assertNotIn("model", correctness)
         self.assertIn("VERDICT", correctness["prompt"])
@@ -2163,17 +2166,28 @@ class OpenCodePluginTests(unittest.TestCase):
         config = self.configure({
             "skills": {"paths": ["/elsewhere"]},
             "command": {"updraft:build": mine, "other": mine},
-            "agent": {"updraft:doc-reviewer": {"prompt": "mine"}},
-            "permission": {"bash": "ask", "skill": {"unslop": "allow"}},
+            "agent": {"updraft:doc-reviewer": {"model": "p/m", "permission": {"bash": "ask", "edit": "ask"}},
+                      "mine": {"prompt": "mine"}},
+            "permission": {"bash": "ask", "skill": {"*": "ask", "principle-*": "allow", "unslop": "allow"}},
         })
         self.assertEqual(config["skills"], {"paths": ["/elsewhere", SKILLS]})
         self.assertEqual(config["command"]["updraft:build"], mine)
         self.assertEqual(config["command"]["other"], mine)
         self.assertIn("updraft:light-build", config["command"])
-        self.assertEqual(config["agent"]["updraft:doc-reviewer"], {"prompt": "mine"})
+        doc = config["agent"]["updraft:doc-reviewer"]
+        self.assertEqual(doc["model"], "p/m")
+        self.assertEqual(doc["mode"], "subagent")
+        self.assertIn("VERDICT", doc["prompt"])
+        self.assertEqual((doc["permission"]["bash"], doc["permission"]["edit"], doc["permission"]["task"]),
+                         ("ask", "ask", "deny"))
+        self.assertEqual(config["agent"]["mine"], {"prompt": "mine"})
         self.assertEqual(config["permission"]["bash"], "ask")
-        self.assertEqual(config["permission"]["skill"]["unslop"], "allow")
-        self.assertEqual(config["permission"]["skill"]["to-tickets"], "deny")
+        # OpenCode applies the last matching rule: the user's `*` first, the user's other patterns last.
+        rules = list(config["permission"]["skill"].items())
+        self.assertEqual(rules[0], ("*", "ask"))
+        self.assertEqual(rules[-2:], [("principle-*", "allow"), ("unslop", "allow")])
+        self.assertIn(("to-tickets", "deny"), rules)
+        self.assertIn(("principle-fix-root-causes", "deny"), rules)
 
     def test_array_skills_and_string_permissions(self):
         config = self.configure({"skills": ["/elsewhere"], "permission": {"skill": "ask"}})
@@ -2193,7 +2207,7 @@ class OpenCodePluginTests(unittest.TestCase):
         }
         agents = {
             "writer-reviewer": "---\nname: writer-reviewer\ndescription: w\ntools: Read, Edit, Agent\n"
-                               "phase: work\n---\nWriter body.\n",
+                               "maxTurns: many\nphase: work\n---\nWriter body.\n",
             "inert": "---\nname: inert\ndescription: not dispatchable\n---\nInert body.\n",
         }
         with tempfile.TemporaryDirectory() as tmp:
@@ -2210,10 +2224,18 @@ class OpenCodePluginTests(unittest.TestCase):
         self.assertTrue(commands["updraft:no-frontmatter"]["template"].startswith("Just a body.\n"))
         self.assertNotIn("permission", config)
         writer = config["agent"]["updraft:writer-reviewer"]
-        self.assertEqual(writer["permission"], {"webfetch": "deny"})
+        self.assertEqual(writer["permission"], dict.fromkeys(
+            ("glob", "grep", "bash", "todowrite", "question", "webfetch", "websearch", "lsp", "skill"), "deny"))
         self.assertNotIn("steps", writer)
         self.assertEqual(writer["prompt"], "Writer body.\n")
         self.assertNotIn("updraft:inert", config["agent"])
+
+    def test_no_agents_folder(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self.fixture(tmp, {"only": "---\nname: only\ndescription: d\n---\nbody\n"}, None)
+            config = self.configure({"agent": {"mine": {"prompt": "mine"}}}, root=root)
+        self.assertEqual(config["agent"], {"mine": {"prompt": "mine"}})
+        self.assertEqual(sorted(config["command"]), ["updraft:only"])
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 // skill paths, each skill as the command /updraft:<skill>, and each dispatchable reviewer in
 // agents/ as the subagent updraft:<name>, the names the skills dispatch on Claude Code. A skill
 // with `disable-model-invocation: true` is denied to the skill tool, as on Claude Code and Codex.
-// What the user's config already sets for any of these wins.
+// What the user's config sets for these names wins; for an agent, field by field.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -52,11 +52,22 @@ function skills() {
   return found;
 }
 
-// Claude Code tool names that grant each OpenCode permission a reviewer's `tools` list can withhold.
+// Each OpenCode tool permission and the Claude Code tools that grant it. A reviewer's `tools`
+// allowlist denies every permission none of its tools grants.
 const GRANTS = {
+  read: ["Read"],
+  list: ["Read", "Glob", "LS"],
+  glob: ["Glob"],
+  grep: ["Grep"],
+  bash: ["Bash"],
   edit: ["Edit", "Write", "MultiEdit", "NotebookEdit"],
   task: ["Agent", "Task"],
+  todowrite: ["TodoWrite"],
+  question: ["AskUserQuestion"],
   webfetch: ["WebFetch"],
+  websearch: ["WebSearch"],
+  lsp: ["LSP"],
+  skill: ["Skill"],
 };
 
 // agents/*.md with a `phase`: reviewer-contract, an authoring template, has none.
@@ -89,13 +100,32 @@ function addSkillPaths(config, dirs) {
   else config.skills = { ...config.skills, paths: add(config.skills?.paths ?? []) };
 }
 
-// Deny the skill tool each named skill the user's permission config leaves unset. A single
+// Each reviewer, with the user's settings for its name merged over it (`permission` key by key).
+function addAgents(config, subagents) {
+  const merged = { ...config.agent };
+  for (const [name, ours] of Object.entries(subagents)) {
+    const user = merged[name] ?? {};
+    const agent = { ...ours, ...user };
+    if (typeof user.permission === "object") agent.permission = { ...ours.permission, ...user.permission };
+    merged[name] = agent;
+  }
+  config.agent = merged;
+}
+
+// Deny the skill tool each named skill. OpenCode applies the last matching rule, so these
+// rules go after the user's `*` and before the user's other patterns, which then win. A single
 // action for every permission (`"permission": "allow"`) is the user's call and stays as it is.
 function denySkills(config, names) {
   if (!names.length || typeof config.permission === "string") return;
   const permission = (config.permission ??= {});
-  const rules = typeof permission.skill === "string" ? { "*": permission.skill } : { ...permission.skill };
-  for (const name of names) rules[name] ??= "deny";
+  const user = typeof permission.skill === "string" ? { "*": permission.skill } : { ...permission.skill };
+  const rules = "*" in user ? { "*": user["*"] } : {};
+  for (const name of names) rules[name] = "deny";
+  for (const [pattern, action] of Object.entries(user)) {
+    if (pattern === "*") continue;
+    delete rules[pattern];
+    rules[pattern] = action;
+  }
   permission.skill = rules;
 }
 
@@ -121,7 +151,7 @@ export const Updraft = async () => {
     config: async (config) => {
       if (dirs.length) addSkillPaths(config, dirs);
       config.command = { ...commands, ...config.command };
-      config.agent = { ...subagents, ...config.agent };
+      addAgents(config, subagents);
       denySkills(config, explicit);
     },
   };

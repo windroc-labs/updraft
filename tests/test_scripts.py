@@ -28,7 +28,6 @@ CI_VERDICT = os.path.join(SCRIPTS, "ci-verdict.py")
 RESOLVE_BRANCH = os.path.join(SCRIPTS, "resolve-branch.py")
 PR_SCRIPT = os.path.join(SCRIPTS, "pr.py")
 LINT_ROSTER = os.path.join(SCRIPTS, "lint-roster.py")
-REVIEW_ROUND = os.path.join(REPO, "workflows", "review-round.js")
 SKILLS = os.path.join(REPO, "skills")
 
 AGENT_TEMPLATE = """\
@@ -677,7 +676,6 @@ class SkillContractTests(unittest.TestCase):
     def test_exact_tokens_survive(self):
         tokens = (
             "EnterWorktree({path: <worktree>})", "`updraft:<name>`", "Agent tool",
-            'Workflow({name: "updraft:updraft-review-round"', "resumeFromRunId", "synthetic",
             "force-push", "write outside the worktree", "history rewrite beyond this branch",
             "rm/reset of uncommitted work", "Auto Mode",
             "branch --show-current", "never a default branch",
@@ -822,7 +820,7 @@ class SkillContractTests(unittest.TestCase):
                 self.assertIn("`python3 ../../scripts/select-panel.py --phase work"
                               " --worktree <worktree> --base <base_ref>`", own)
                 self.assertIn("`S6 panel: core=[…] +optional=[…] verification=<local|ci>"
-                              " transport=Workflow`", own)
+                              "`", own)
                 self.assertNotIn("decision(panel)", own)
                 self.assertNotIn("pinned", own)
                 self.assertNotIn("Add no optional lens", own)
@@ -1784,130 +1782,26 @@ class ResolveBranchTests(unittest.TestCase):
         self.assertNotEqual(self.resolve(None, REQ)["input_sha"], self.resolve(None, REQ + "!")["input_sha"])
 
 
-class ReviewRoundScriptTests(unittest.TestCase):
-    """Contract, syntax and behavior of workflows/review-round.js. The runtime
-    runs the body inside an async function with `args`, `phase`, `log`,
-    `parallel` and `agent` in scope; the behavior test supplies stubs for them.
-    """
-
-    def run_round(self, args_js, verdicts):
-        body = self.text.replace("export const meta", "const meta", 1)
-        script = (
-            "async function _wf(args, phase, log, parallel, agent) {\n%s\n}\n"
-            "const verdicts = %s;\n"
-            "const schemas = {};\n"
-            "const out = await _wf(%s, () => {}, () => {},\n"
-            "  fns => Promise.all(fns.map(f => f())),\n"
-            "  async (prompt, opts) => { schemas[opts.label] = opts.schema; return verdicts[opts.label] });\n"
-            "console.log(JSON.stringify({...out, schemas}));\n"
-        ) % (body, json.dumps(verdicts), args_js)
-        with tempfile.TemporaryDirectory() as td:
-            mjs = os.path.join(td, "round.mjs")
-            with open(mjs, "w", encoding="utf-8") as fh:
-                fh.write(script)
-            proc = subprocess.run(["node", mjs], capture_output=True, text=True)
-        self.assertEqual(proc.returncode, 0, proc.stderr)
-        return json.loads(proc.stdout)
-
-    @unittest.skipUnless(shutil.which("node"), "node not installed")
-    def test_schema_tells_reviewers_an_empty_list_is_brackets(self):
-        members = [{"agent": "a", "subagent_type": "updraft:a", "prompt": "p"}]
-        verdicts = {"a": {"VERDICT": "PASS", "BLOCKING": [], "NON_BLOCKING": []}}
-        schema = self.run_round(json.dumps({"phase": "work", "members": members}), verdicts)["schemas"]["a"]
-        for field in ("BLOCKING", "NON_BLOCKING"):
-            self.assertEqual(schema["properties"][field]["description"],
-                             'Empty array [] when there are none; never a "none" item.')
-
-    @unittest.skipUnless(shutil.which("node"), "node not installed")
-    def test_round_normalizes_every_verdict(self):
-        members = [{"agent": a, "subagent_type": "updraft:" + a, "prompt": "p"}
-                   for a in ("silent", "pass-with-blocker", "clean", "fail")]
-        verdicts = {
-            "pass-with-blocker": {"VERDICT": "PASS", "BLOCKING": ["x.py:1 off by one"], "NON_BLOCKING": []},
-            "clean": {"VERDICT": "PASS", "BLOCKING": [], "NON_BLOCKING": ["nit", 7]},
-            "fail": {"VERDICT": "FAIL", "BLOCKING": ["y"], "NON_BLOCKING": []},
-        }
-        args = {"phase": "work", "members": members}
-        for args_js in (json.dumps(args), json.dumps(json.dumps(args))):
-            with self.subTest(args_js=args_js[:20]):
-                out = self.run_round(args_js, verdicts)
-                self.assertEqual(out["phase"], "work")
-                got = {v["agent"]: (v["VERDICT"], v["BLOCKING"], v["NON_BLOCKING"], v["synthetic"])
-                       for v in out["verdicts"]}
-                self.assertEqual([v["agent"] for v in out["verdicts"]], [m["agent"] for m in members])
-                self.assertEqual(got["silent"], ("FAIL", ["no verdict returned (skip/terminal error)"], [], True))
-                self.assertEqual(got["pass-with-blocker"], ("FAIL", ["x.py:1 off by one"], [], False))
-                self.assertEqual(got["clean"], ("PASS", [], ["nit"], False))
-                self.assertEqual(got["fail"], ("FAIL", ["y"], [], False))
-
-    @unittest.skipUnless(shutil.which("node"), "node not installed")
-    def test_unparseable_args_dispatch_nothing(self):
-        out = self.run_round(json.dumps("{not json"), {})
-        self.assertEqual(out["verdicts"], [])
-
-    @classmethod
-    def setUpClass(cls):
-        with open(REVIEW_ROUND, encoding="utf-8") as fh:
-            cls.text = fh.read()
-
-    def test_contract_markers_present(self):
-        """The contract markers all appear verbatim."""
-        for marker in (
-            "export const meta",
-            "updraft-review-round",
-            "agentType",
-            "schema",
-            "no verdict returned (skip/terminal error)",
-            "synthetic",
-            "verdicts",
-            "return {",
-            # Schema field names + verdict values: renaming any silently breaks judging.
-            "required: ['VERDICT', 'BLOCKING', 'NON_BLOCKING'],",
-            "enum: ['PASS', 'FAIL']",
-        ):
-            self.assertIn(marker, self.text, marker)
-
-    def test_no_ambient_authority(self):
-        """No imports/FS/env/network/clock — args is the script's only input."""
-        for banned in (
-            "require(",
-            "import ",
-            "import(",  # dynamic import — "import " alone would miss it
-            "process.",
-            "fs.",
-            "fetch(",
-            "Date.now",
-            "Math.random",
-        ):
-            self.assertNotIn(banned, self.text, banned)
-
-    @unittest.skipUnless(shutil.which("node"), "node not installed")
-    def test_node_syntax_check(self):
-        """node --check accepts the script under the runtime's execution model:
-        the Workflows runtime hoists the `export const meta` and runs the body
-        inside an async function (so top-level `await` and `return` are legal).
-        Emulate that: demote the export, wrap the body, check as ESM (.mjs)."""
-        wrapped = "async function _wf() {\n%s\n}\n" % self.text.replace(
-            "export const meta", "const meta", 1
-        )
-        with tempfile.TemporaryDirectory() as td:
-            mjs = os.path.join(td, "review-round.mjs")
-            with open(mjs, "w", encoding="utf-8") as fh:
-                fh.write(wrapped)
-            proc = subprocess.run(
-                ["node", "--check", mjs],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-            self.assertEqual(proc.returncode, 0, proc.stderr.decode())
-
-
 class StandaloneSkillTests(unittest.TestCase):
     """council and review run alone or from another skill, with a neutral brief and no repo."""
 
     def read(self, *parts):
         with open(os.path.join(REPO, *parts), encoding="utf-8") as fh:
             return fh.read()
+
+    def test_review_round_uses_one_subagent_batch(self):
+        rounds = flat(self.read("references", "review-round.md"))
+        for token in ("one parallel subagent batch", "Queue the rest when the host's concurrency limit is reached",
+                      "Codex always works this way", "pass no `model` to `spawn_agent`",
+                      "a dispatched lens with a missing or unparseable verdict is FAIL"):
+            with self.subTest(token=token):
+                self.assertIn(token, rounds)
+        for skill in ("build", "light-build", "review"):
+            text = self.read("skills", skill, "SKILL.md")
+            tools = re.search(r"(?m)^allowed-tools: (.+)$", text).group(1).split(", ")
+            self.assertIn("Agent", tools, skill)
+            self.assertIn("Task", tools, skill)
+            self.assertNotIn("transport=", text, skill)
 
     def test_frontmatter_and_links_resolve(self):
         for skill in ("council", "review"):

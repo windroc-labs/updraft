@@ -189,15 +189,7 @@ verify 명령, `RESUME:` 줄, 진행 로그, 리뷰 항목, 코드베이스 사�
 각 reviewer가 frontmatter의 `model:`과 `effort:`로 `updraft:<name>`으로 실행되고, Codex에서는 세션의 모델을 그대로 씁니다.
 re-review되는 lens는 이전 리뷰 항목과 (S6에서는) 수정 diff를 가지고 새로 시작합니다.
 
-### Plugin workflow(`workflows/review-round.js`)
-
-한 라운드의 기본 전송 방식인 `Workflow({name: "updraft:updraft-review-round", args})`는 모든 멤버를 병렬로 실행하고
-각 verdict를 스키마로 검증합니다. Workflow가 없으면 skill이 네이티브로 보냅니다.
-
-- 입력 `args`: `{phase, members: [{agent, subagent_type, prompt}]}`.
-- 출력: `{phase, verdicts: [{agent, VERDICT, BLOCKING, NON_BLOCKING, synthetic}]}`, 멤버 순서대로. `VERDICT`는 reviewer가
-  `PASS`라고 했고 `BLOCKING`이 없을 때만 `PASS`입니다. verdict가 없는 멤버는 `synthetic: true`와 함께 `FAIL`이 되며,
-  skill이 네이티브로 한 번 다시 보냅니다.
+각 라운드는 모든 멤버를 새로운 일반 subagent로 한 배치에서 병렬 실행하며, 호스트의 동시 실행 한도에 도달하면 나머지를 대기열에 넣습니다.
 
 ## 로컬 개발
 
@@ -240,8 +232,6 @@ updraft/
 │   ├── resolve-branch.py         # S1: resume / stay / reuse / create / stop
 │   ├── _frontmatter.py           # parser shared by the selector and the roster lint
 │   └── lint-roster.py            # roster lint
-├── workflows/
-│   └── review-round.js           # plugin workflow: one parallel review round
 ├── agents/                       # review roster
 │   ├── reviewer-contract.md      # authoring template, inlined into ordinary reviewers
 │   └── *-reviewer.md             # one lens each

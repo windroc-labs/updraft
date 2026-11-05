@@ -75,6 +75,12 @@ los muestra al modelo por sí solo: un worker invoca `updraft:principles`, que l
 nombre con su archivo, y luego lee ese archivo. También puedes ejecutar uno por su nombre,
 como `/updraft:principle-fix-root-causes`.
 
+También incluye otras dos skills, sin cambios. `grilling` (`/updraft:grilling`) entrevista
+al usuario por rondas de preguntas numeradas, cada una con una respuesta recomendada, hasta
+resolver cada decisión de un plan. `to-tickets` (`/updraft:to-tickets`) divide un plan en
+tickets tracer-bullet, cada uno con los tickets que lo bloquean. El modelo puede iniciar
+`grilling` por sí solo; `to-tickets` solo se ejecuta por su nombre.
+
 ## Cómo funciona una run
 
 ```mermaid
@@ -241,7 +247,9 @@ updraft/
 │   ├── council/SKILL.md          # /updraft:council: independent picks at a fork
 │   ├── principles/SKILL.md       # /updraft:principles: index of the pstack skills below
 │   ├── principle-<name>/         # 24 pstack principles: verbatim SKILL.md + our agents/openai.yaml
-│   └── unslop/                   # pstack unslop: verbatim SKILL.md + our agents/openai.yaml
+│   ├── unslop/                   # pstack unslop: verbatim SKILL.md + our agents/openai.yaml
+│   ├── grilling/                 # grilling: verbatim SKILL.md
+│   └── to-tickets/               # to-tickets: verbatim SKILL.md + our agents/openai.yaml
 ├── references/
 │   ├── updraft-common.md         # run rules build and light-build share
 │   └── review-round.md           # how a review round runs and loops
@@ -258,6 +266,6 @@ updraft/
 ├── tests/
 │   └── test_scripts.py           # stdlib unittest for the scripts
 ├── AGENTS.md                     # contributor guidance for Claude Code and Codex
-├── THIRD_PARTY_NOTICES.md        # pstack provenance and MIT license
+├── THIRD_PARTY_NOTICES.md        # vendored skills' provenance and licenses
 └── README.md
 ```

@@ -1936,6 +1936,18 @@ class StandaloneSkillTests(unittest.TestCase):
         for skill in ("build", "light-build"):
             self.assertIn("../../references/review-round.md", self.read("skills", skill, "SKILL.md"), skill)
 
+    def test_first_fix_reads_the_debugging_principles_once(self):
+        rounds = self.read("references", "review-round.md")
+        fix = flat(rounds[rounds.index("### The fix"):])
+        for name in ("fix-root-causes", "attack-the-premise"):
+            path = os.path.join(REPO, "skills", f"principle-{name}", "SKILL.md")
+            with self.subTest(principle=name):
+                self.assertIn(f"(../skills/principle-{name}/SKILL.md)", fix)
+                self.assertTrue(os.path.exists(path), path)
+        self.assertIn("Before your first fix of the run, read", fix)
+        self.assertIn("in full, once", fix)
+        self.assertNotIn("what that fix assumed", fix)
+
 
 class PstackLibraryTests(unittest.TestCase):
     """The vendored pstack skills ship with their notice, stay out of implicit invocation on

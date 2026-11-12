@@ -1971,6 +1971,17 @@ class PstackLibraryTests(unittest.TestCase):
         self.assertEqual(self.notice_dirs(), sorted(pstack))
         self.assertEqual(self.index_dirs(), sorted(pstack))
 
+    def test_index_says_when_each_skill_applies(self):
+        rows = [[c.strip() for c in line.strip().strip("|").split("|")]
+                for line in self.read(self.INDEX).splitlines() if line.startswith("|")]
+        self.assertEqual(rows[0], ["Name", "When it applies", "File"])
+        body = rows[2:]
+        self.assertEqual(sorted(re.fullmatch(r"`\.\./([\w-]+)/SKILL\.md`", r[2]).group(1) for r in body),
+                         self.pstack_dirs())
+        for name, when, _ in body:
+            with self.subTest(skill=name):
+                self.assertTrue(when, "no trigger for %s" % name)
+
     def test_index_paths_resolve_to_the_named_skill(self):
         for d in self.index_dirs():
             with self.subTest(skill=d):

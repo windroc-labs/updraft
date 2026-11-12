@@ -110,6 +110,10 @@ At the cap without a pass, the caller says what happens.
 
 ### The fix
 
+Before your first fix of the run, read
+[`../skills/principle-fix-root-causes/SKILL.md`](../skills/principle-fix-root-causes/SKILL.md) and
+[`../skills/principle-attack-the-premise/SKILL.md`](../skills/principle-attack-the-premise/SKILL.md)
+in full, once; follow them in every fix.
+
 Fix all deduped open blockers yourself in one pass, from their full text,
-their item IDs and the locations they cite. If an item stays OPEN after a fix, write down
-what that fix assumed and check the assumption before the next fix depends on it.
+their item IDs and the locations they cite.

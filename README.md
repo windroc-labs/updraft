@@ -10,7 +10,7 @@ A Claude Code, Codex and OpenCode plugin that turns one requirement into a revie
 without asking you anything. It writes the work itself (code, docs, designs, data, plans),
 independent reviewer agents judge it, and it fixes until they all pass. It never merges.
 
-> Status: **v0.2.2**
+> Status: **v0.2.3**
 
 ## Install
 
@@ -22,7 +22,7 @@ In Claude Code, install it from the `windroc` marketplace:
 ```
 
 The `/plugin` menu also works; to run a local checkout, start `claude --plugin-dir <path>`.
-Releases use explicit semver (currently `0.2.2`). To update, run
+Releases use explicit semver (currently `0.2.3`). To update, run
 `/plugin marketplace update windroc`, then the install line again. No other plugin is needed.
 
 **Codex.** Invoke the `updraft:build` or `updraft:light-build` skill with your
@@ -108,7 +108,7 @@ flowchart LR
 | S2 Spec | Writes the spec from the requirement and the code it touches. `check-spec.py` checks its sections and that every acceptance criterion has a test or check. |
 | S3 Spec review | Review loop over the spec. Each re-review covers the whole spec with the full panel. |
 | S4 Task list | Code-free. Each task is one revertable commit: files, cross-task interfaces, tests to write first, the checks it runs, commit message. The full verify command sits above the tasks, with the CI checks that run its tests when publishing. |
-| S5 Produce | Implements the tasks in order: new tests fail first, then the code, then checks covering only the changed files, then a commit. No per-task review. |
+| S5 Produce | Implements the tasks in order: new tests fail first, then the code, then checks covering only the changed files, then a commit. May hand a self-contained task to a fresh producer. No per-task review. |
 | S6 Work review | Review loop over the work at a pinned commit. Each fix round is one `fix(r<N>)` commit. |
 | S7 Finish | Report and integration options, a squash merge among them. Copies the plan docs to the project's plan location if its AGENTS.md or CLAUDE.md names one. |
 
@@ -163,7 +163,9 @@ runs the full suite locally that round.
 At a genuine fork (materially different trade-offs, or a choice costly to reverse) the run
 runs the council (`skills/council`): it logs its own pick, 2–4 fresh subagents answer from
 the question, the requirement, the documents it names and read-only code, and it decides
-and logs the tally.
+and logs the tally. A
+delegated producer at a fork returns a `FORK:` marker instead, and the orchestrator decides
+and re-dispatches it.
 
 Every run ends with one fenced `updraft-result` JSON block, so a caller reads the
 outcome without parsing prose:
@@ -251,7 +253,7 @@ Repo layout:
 ```
 updraft/
 ├── .claude-plugin/
-│   └── plugin.json               # name: updraft (version 0.2.2)
+│   └── plugin.json               # name: updraft (version 0.2.3)
 ├── .codex-plugin/
 │   └── plugin.json               # Codex manifest: same name and version
 ├── package.json                  # OpenCode package: same name and version

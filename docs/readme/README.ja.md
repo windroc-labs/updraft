@@ -89,7 +89,7 @@ flowchart LR
 | S2 Spec | requirement とそれが触れるコードから spec を書きます。`check-spec.py` がセクションと、すべての受け入れ基準にテストかチェックがあることを確認します。 |
 | S3 Spec review | spec に対するレビューループ。re-review のたびにフル panel が spec 全体をレビューします。 |
 | S4 Task list | コードは書きません。各 task は元に戻せる 1 つの commit です: ファイル、task 間のインターフェース、先に書くテスト、実行するチェック、commit メッセージ。完全な verify コマンドが task の上に置かれ、公開時にはそのテストを実行する CI チェックも添えられます。 |
-| S5 Produce | task を順に実装します: 新しいテストをまず失敗させ、次にコード、変更したファイルだけを対象にしたチェック、そして commit。task ごとのレビューはありません。 |
+| S5 Produce | task を順に実装します: 新しいテストをまず失敗させ、次にコード、変更したファイルだけを対象にしたチェック、そして commit。自己完結した task を新しい producer に渡すこともあります。task ごとのレビューはありません。 |
 | S6 Work review | 固定した commit で作業をレビューするループ。各修正ラウンドは 1 つの `fix(r<N>)` commit です。 |
 | S7 Finish | レポートと統合の選択肢（squash merge を含む）。プロジェクトの AGENTS.md または CLAUDE.md が計画の保存場所を指定していれば、plan doc をそこにコピーします。 |
 
@@ -138,7 +138,8 @@ verifier は reviewer agent ではなく `scripts/ci-verdict.py` になります
 
 本当の分岐点（トレードオフが大きく異なる、または元に戻すのが高くつく選択）では、run は council（`skills/council`）を実行します:
 まず自分の選択を記録し、2〜4 体の新しい subagent が質問、requirement、そこで挙げられたドキュメント、読み取り専用のコードから回答し、
-最後に判断して集計を記録します。
+最後に判断して集計を記録します。委任された producer が分岐点に来た場合は、代わりに `FORK:` マーカーを返し、
+orchestrator が判断して再度送り出します。
 
 すべての run は 1 つのフェンス付き `updraft-result` JSON ブロックで終わるので、呼び出し側は文章を解析せずに結果を読めます:
 

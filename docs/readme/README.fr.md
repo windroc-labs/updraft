@@ -97,7 +97,7 @@ flowchart LR
 | S2 Spec | Rédige la spec à partir du requirement et du code concerné. `check-spec.py` vérifie ses sections et que chaque critère d'acceptation a un test ou une vérification. |
 | S3 Spec review | Boucle de revue sur la spec. Chaque re-review couvre toute la spec avec le panel complet. |
 | S4 Task list | Sans code. Chaque task est un commit réversible : fichiers, interfaces entre tasks, tests à écrire d'abord, vérifications qu'elle lance, message de commit. La commande de verify complète figure au-dessus des tasks, avec les checks CI qui lancent ses tests lors d'une publication. |
-| S5 Produce | Implémente les tasks dans l'ordre : les nouveaux tests échouent d'abord, puis le code, puis des vérifications limitées aux fichiers modifiés, puis un commit. Peut confier une task autonome à un producer tout neuf. Pas de revue par task. |
+| S5 Produce | Implémente les tasks dans l'ordre : les nouveaux tests échouent d'abord, puis le code, puis des vérifications limitées aux fichiers modifiés, puis un commit. Pas de revue par task. |
 | S6 Work review | Boucle de revue sur le travail à un commit épinglé. Chaque round de correction est un commit `fix(r<N>)`. |
 | S7 Finish | Rapport et options d'intégration, dont un squash merge. Copie les plan docs vers l'emplacement des plans du projet si son AGENTS.md ou CLAUDE.md en désigne un. |
 
@@ -152,8 +152,7 @@ local pour ce round.
 À une vraie bifurcation (des compromis nettement différents, ou un choix coûteux à défaire), la run lance le
 council (`skills/council`) : elle consigne son propre choix, 2 à 4 subagents tout neufs répondent à partir de la
 question, du requirement, des documents qu'il cite et du code en lecture seule, puis elle décide et consigne le
-décompte. Un producer délégué face à une bifurcation renvoie plutôt un marqueur `FORK:`, et l'orchestrator
-décide puis le relance.
+décompte.
 
 Chaque run se termine par un unique bloc JSON `updraft-result` délimité, pour qu'un appelant lise le
 résultat sans analyser de prose :

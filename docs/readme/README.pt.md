@@ -95,7 +95,7 @@ flowchart LR
 | S2 Spec | Escreve a spec a partir do requirement e do código que ele toca. `check-spec.py` verifica as seções e se cada critério de aceitação tem um teste ou uma verificação. |
 | S3 Spec review | Loop de revisão sobre a spec. Cada re-review cobre a spec inteira com o panel completo. |
 | S4 Task list | Sem código. Cada task é um commit reversível: arquivos, interfaces entre tasks, testes a escrever primeiro, as verificações que ela roda, mensagem de commit. O comando de verify completo fica acima das tasks, com os checks de CI que rodam seus testes ao publicar. |
-| S5 Produce | Implementa as tasks em ordem: os novos testes falham primeiro, depois o código, depois verificações que cobrem só os arquivos alterados, depois um commit. Pode passar uma task autocontida a um producer novo. Sem revisão por task. |
+| S5 Produce | Implementa as tasks em ordem: os novos testes falham primeiro, depois o código, depois verificações que cobrem só os arquivos alterados, depois um commit. Sem revisão por task. |
 | S6 Work review | Loop de revisão sobre o trabalho em um commit fixado. Cada rodada de correção é um commit `fix(r<N>)`. |
 | S7 Finish | Relatório e opções de integração, entre elas um squash merge. Copia os plan docs para o local de planos do projeto se o AGENTS.md ou CLAUDE.md dele indicar um. |
 
@@ -147,8 +147,7 @@ Se a CI não der um resultado utilizável, o verification reviewer roda a suíte
 
 Diante de uma bifurcação real (trade-offs bem diferentes, ou uma escolha cara de reverter) a run executa o council
 (`skills/council`): registra a própria escolha, 2–4 subagents novos respondem com base na pergunta, no requirement,
-nos documentos que ele cita e no código somente leitura, e ela decide e registra a contagem. Um producer delegado
-diante de uma bifurcação retorna em vez disso um marcador `FORK:`, e o orchestrator decide e o dispara de novo.
+nos documentos que ele cita e no código somente leitura, e ela decide e registra a contagem.
 
 Toda run termina com um único bloco JSON `updraft-result` delimitado, para que quem chamou leia o resultado sem
 analisar texto:

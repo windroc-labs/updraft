@@ -46,9 +46,8 @@ step inside a larger skill/workflow); users still type `/updraft:build` /
 `/updraft:light-build`. `light-build` is the low-ceremony surface: a harness
 (S1 → S4 → S5 → S6 → S7) with no spec doc and no spec review; its S6 panel comes from
 the selector like build's and is capped at 3 rounds. It does not gate scope — surface choice is
-the user's responsibility. When invoked, the *main-session agent implements the work itself* (S5 tasks and S6 fixes,
-optionally handing a self-contained task to a fresh producer) while independent reviewer
-subagents judge it; only their verdicts decide. Both read `references/updraft-common.md` (the run rules they share:
+the user's responsibility. When invoked, the *main-session agent implements the work itself* (S5 tasks and S6 fixes)
+while independent reviewer subagents judge it; only their verdicts decide. Both read `references/updraft-common.md` (the run rules they share:
 disciplines, state, worktree, fixes, safety stops, result block) and `references/review-round.md`
 (how a review round runs and loops) first; each SKILL.md keeps only its own input, state, steps
 and review settings. Understanding the system means reading those four files plus `agents/`,

@@ -10,7 +10,7 @@ A Claude Code, Codex and OpenCode plugin that turns one requirement into a revie
 without asking you anything. It writes the work itself (code, docs, designs, data, plans),
 independent reviewer agents judge it, and it fixes until they all pass. It never merges.
 
-> Status: **v0.2.1**
+> Status: **v0.2.2**
 
 ## Install
 
@@ -22,7 +22,7 @@ In Claude Code, install it from the `windroc` marketplace:
 ```
 
 The `/plugin` menu also works; to run a local checkout, start `claude --plugin-dir <path>`.
-Releases use explicit semver (currently `0.2.1`). To update, run
+Releases use explicit semver (currently `0.2.2`). To update, run
 `/plugin marketplace update windroc`, then the install line again. No other plugin is needed.
 
 **Codex.** Invoke the `updraft:build` or `updraft:light-build` skill with your
@@ -251,7 +251,7 @@ Repo layout:
 ```
 updraft/
 ├── .claude-plugin/
-│   └── plugin.json               # name: updraft (version 0.2.1)
+│   └── plugin.json               # name: updraft (version 0.2.2)
 ├── .codex-plugin/
 │   └── plugin.json               # Codex manifest: same name and version
 ├── package.json                  # OpenCode package: same name and version

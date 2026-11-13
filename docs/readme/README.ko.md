@@ -89,7 +89,7 @@ flowchart LR
 | S2 Spec | requirement와 그것이 건드리는 코드를 바탕으로 spec을 씁니다. `check-spec.py`가 섹션을 확인하고, 모든 인수 기준에 테스트나 검사가 있는지 확인합니다. |
 | S3 Spec review | spec에 대한 리뷰 루프. re-review마다 전체 panel이 spec 전체를 검토합니다. |
 | S4 Task list | 코드는 쓰지 않습니다. 각 task는 되돌릴 수 있는 commit 하나입니다: 파일, task 간 인터페이스, 먼저 쓸 테스트, 실행할 검사, commit 메시지. 전체 verify 명령은 task 위에 두고, 게시할 때는 그 테스트를 실행하는 CI 검사도 함께 적습니다. |
-| S5 Produce | task를 순서대로 구현합니다: 새 테스트가 먼저 실패하고, 그다음 코드, 변경된 파일만 다루는 검사, 그리고 commit. task별 리뷰는 없습니다. |
+| S5 Produce | task를 순서대로 구현합니다: 새 테스트가 먼저 실패하고, 그다음 코드, 변경된 파일만 다루는 검사, 그리고 commit. 자기 완결적인 task는 새 producer에게 맡길 수 있습니다. task별 리뷰는 없습니다. |
 | S6 Work review | 고정된 commit에서 작업물을 리뷰하는 루프. 수정 라운드마다 `fix(r<N>)` commit 하나입니다. |
 | S7 Finish | 보고서와 통합 옵션(squash merge 포함). 프로젝트의 AGENTS.md나 CLAUDE.md가 계획 문서 위치를 지정하면 plan doc을 그곳에 복사합니다. |
 
@@ -138,7 +138,7 @@ verifier는 reviewer agent가 아니라 `scripts/ci-verdict.py`가 됩니다. �
 
 진짜 갈림길(트레이드오프가 크게 다르거나 되돌리기 비싼 선택)에서 run은 council(`skills/council`)을 실행합니다:
 먼저 자신의 선택을 기록하고, 새로 띄운 2–4개의 subagent가 질문, requirement, 거기에 언급된 문서, 읽기 전용 코드를 바탕으로 답한 뒤,
-결정을 내리고 집계를 기록합니다.
+결정을 내리고 집계를 기록합니다. 위임된 producer가 갈림길을 만나면 대신 `FORK:` 마커를 반환하고, orchestrator가 결정한 뒤 다시 보냅니다.
 
 모든 run은 펜스로 감싼 `updraft-result` JSON 블록 하나로 끝나므로, 호출자는 산문을 파싱하지 않고도 결과를 읽을 수 있습니다:
 

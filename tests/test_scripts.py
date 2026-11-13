@@ -781,7 +781,7 @@ class SkillContractTests(unittest.TestCase):
         produce = section("## Produce (S5)")
         self.assertIn("Implement it yourself", produce)
         self.assertNotIn("never edit the work product", common)
-        self.assertNotIn("FORK:", produce)
+        self.assertIn("FORK:", produce)
         fixes = section("## S6 fixes")
         self.assertIn("yourself", fixes)
         self.assertNotIn("SendMessage", fixes)

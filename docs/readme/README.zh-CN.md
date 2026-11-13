@@ -90,7 +90,7 @@ flowchart LR
 | S2 Spec | 根据 requirement 和它涉及的代码编写 spec。`check-spec.py` 检查其章节，并确认每条验收标准都有对应的测试或检查。 |
 | S3 Spec review | 对 spec 的 review 循环。每次 re-review 都由完整 panel 审阅整个 spec。 |
 | S4 Task list | 不含代码。每个 task 是一个可回退的 commit：文件、跨 task 的接口、先写的测试、要跑的检查、commit message。完整的 verify 命令写在 task 之上；发布时还附上运行其测试的 CI 检查。 |
-| S5 Produce | 按顺序实现各 task：新测试先失败，再写代码，然后只跑覆盖改动文件的检查，最后 commit。不做逐 task review。 |
+| S5 Produce | 按顺序实现各 task：新测试先失败，再写代码，然后只跑覆盖改动文件的检查，最后 commit。可以把自包含的 task 交给一个全新的 producer。不做逐 task review。 |
 | S6 Work review | 在固定的 commit 上对工作做 review 循环。每轮修复是一个 `fix(r<N>)` commit。 |
 | S7 Finish | 报告和集成选项，其中包括 squash merge。如果项目的 AGENTS.md 或 CLAUDE.md 指定了计划文档位置，就把 plan doc 复制过去。 |
 
@@ -139,7 +139,8 @@ flowchart TD
 
 在真正的岔路口（取舍明显不同，或选择代价高、难以回退），run 会运行 council（`skills/council`）：
 它先记录自己的选择，2–4 个全新的 subagent 根据问题、requirement、其中提到的文档和只读代码作答，
-然后它做决定并记录票数。
+然后它做决定并记录票数。被委派的 producer 遇到岔路口时改为返回 `FORK:` 标记，
+由 orchestrator 决定后重新派发。
 
 每次 run 都以一个带围栏的 `updraft-result` JSON 块结束，调用方无需解析文字即可读取结果：
 

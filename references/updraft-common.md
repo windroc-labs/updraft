@@ -153,8 +153,8 @@ command never does.
   generated update, never both), split by behavior rather than layer, ordered so removals
   and prep come first. Split a task that mixes purposes; fold one with no purpose of its
   own into the task it serves.
-- **One `### Task N: <name>` heading per task.** A brief runs to the next task heading.
-  Each brief lists:
+- **One `### Task N: <name>` heading per task.** A brief runs to the next task heading,
+  so a producer can be handed one alone. Each brief lists:
   - Files.
   - Consumes / Produces: exact names and signatures that cross tasks.
   - Tests to write first, including edge cases.
@@ -177,6 +177,23 @@ For each task, starting from the first one not `done`:
    `fix(ci): <check names>`. Exit 5: merge the base as in Publish (Conflicts), with no
    round to re-run. Any other exit: go on. Then run `pr.py push --task` (Publish), add
    Notes for anything a later task needs, and log the task `done`.
+
+**Delegation.** You may hand a self-contained task that would flood your context, such as
+a bulk mechanical edit or a large isolated module, to one fresh producer. Give it the task
+list header, its `### Task N` brief and what the skill adds (Brief workers fully). The producer follows steps 1 and 2, commits, and returns its red count and any
+Notes lines for you to record. You confirm the commit, then finish step 3. If the
+producer fails, implement the task yourself.
+
+A producer never consults the council. At a genuine fork, it stops and returns:
+
+```
+FORK: <one-line question>
+- option A: <terse description + trade-off>
+- option B: <terse description + trade-off>
+```
+
+Then you run the council on it (Council) and re-dispatch the producer with the decision
+in its prompt: `DECISION: <chosen option + one-line rationale>; proceed — do not re-fork on this`.
 
 ## Review round
 

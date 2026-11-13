@@ -97,7 +97,7 @@ flowchart LR
 | S2 Spec | Escribe la spec a partir del requirement y del código que toca. `check-spec.py` comprueba sus secciones y que cada criterio de aceptación tenga un test o una comprobación. |
 | S3 Spec review | Bucle de revisión sobre la spec. Cada re-review cubre la spec entera con el panel completo. |
 | S4 Task list | Sin código. Cada task es un commit reversible: archivos, interfaces entre tasks, tests que se escriben primero, las comprobaciones que ejecuta, mensaje de commit. El comando de verify completo va encima de las tasks, con los checks de CI que ejecutan sus tests cuando se publica. |
-| S5 Produce | Implementa las tasks en orden: primero fallan los tests nuevos, luego el código, luego las comprobaciones que cubren solo los archivos cambiados y luego un commit. Puede pasar una task autocontenida a un producer nuevo. No hay revisión por task. |
+| S5 Produce | Implementa las tasks en orden: primero fallan los tests nuevos, luego el código, luego las comprobaciones que cubren solo los archivos cambiados y luego un commit. No hay revisión por task. |
 | S6 Work review | Bucle de revisión sobre el trabajo en un commit fijado. Cada ronda de corrección es un commit `fix(r<N>)`. |
 | S7 Finish | Informe y opciones de integración, entre ellas un squash merge. Copia los plan docs a la ubicación de planes del proyecto si su AGENTS.md o CLAUDE.md nombra una. |
 
@@ -151,8 +151,7 @@ un reviewer. Si CI no da un resultado utilizable, el verification reviewer ejecu
 Ante una bifurcación real (compensaciones claramente distintas, o una elección costosa de revertir) la run
 ejecuta el council (`skills/council`): registra su propia elección, 2–4 subagents nuevos responden a partir de
 la pregunta, el requirement, los documentos que menciona y el código en solo lectura, y decide y registra el
-recuento. Un producer delegado ante una bifurcación devuelve en su lugar un marcador `FORK:`, y el orchestrator
-decide y lo vuelve a lanzar.
+recuento.
 
 Cada run termina con un único bloque JSON `updraft-result` delimitado, para que quien la llama lea el
 resultado sin analizar prosa:

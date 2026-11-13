@@ -41,8 +41,7 @@ and the structure that holds them, kept plain when it is clear and local.
 
 ### S5. Produce
 
-Per common: Produce (S5). A delegated producer is dispatched with `Task` and also gets the
-requirement.
+Per common: Produce (S5).
 
 ### S6. Work review
 

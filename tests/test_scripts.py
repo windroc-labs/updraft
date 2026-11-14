@@ -1949,6 +1949,32 @@ class StandaloneSkillTests(unittest.TestCase):
         self.assertNotIn("what that fix assumed", fix)
 
 
+class ReviewScopeTests(unittest.TestCase):
+    """Reviews block only on the requirement's normal use, and the fix loop cannot grow
+    scope on its own: spec non-blockers stay out, a fix-on-fix round brakes, and the
+    author may object to hardening for requirement-fidelity to rule."""
+
+    def read(self, *parts):
+        with open(os.path.join(REPO, *parts), encoding="utf-8") as fh:
+            return fh.read()
+
+    def test_contract_blocks_only_normal_use(self):
+        text = self.read("agents", "reviewer-contract.md")
+        rule = flat(text[text.index("- **Blockers are defects.**"):text.index("- **Report only real findings.**")])
+        for token in ("errors under the normal use the requirement describes",
+                      "a defect in existing code counts too",
+                      "(command-line arguments, config files, external interfaces)", "is normal use",
+                      "crafted on purpose, from a user the requirement does not name",
+                      "is NON-BLOCKING", "Preferences go in NON-BLOCKING or nowhere"):
+            with self.subTest(token=token):
+                self.assertIn(token, rule)
+        for name in ("boundary-discipline", "subtract-before-you-add"):
+            link = f"../skills/principle-{name}/SKILL.md"
+            with self.subTest(principle=name):
+                self.assertIn(f"({link})", rule)
+                self.assertTrue(os.path.exists(os.path.join(REPO, "agents", link)), link)
+
+
 class PstackLibraryTests(unittest.TestCase):
     """The vendored pstack skills ship with their notice, stay out of implicit invocation on
     both hosts, and the `principles` skill indexes each one by name."""

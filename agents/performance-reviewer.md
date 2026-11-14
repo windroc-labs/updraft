@@ -40,8 +40,14 @@ issues, not micro-optimizations.
 - **Cite evidence.** Each item: location (`file:line`; the file for something missing;
   the spec clause for specs), the defect, and a concrete case. "§3 never says what an
   empty list returns" beats "needs more detail".
-- **Blockers are defects.** Apply your lens's blocker rule; preferences go in
-  NON-BLOCKING or nowhere.
+- **Blockers are defects.** Apply your lens's blocker rule to errors under the normal use
+  the requirement describes; a defect in existing code counts too. Malformed input a user
+  gives at a system boundary (command-line arguments, config files, external interfaces)
+  is normal use, per [boundary-discipline](../skills/principle-boundary-discipline/SKILL.md).
+  An error that needs input crafted on purpose, from a user the requirement does not name,
+  is NON-BLOCKING: guarding it adds scope, per
+  [subtract-before-you-add](../skills/principle-subtract-before-you-add/SKILL.md).
+  Preferences go in NON-BLOCKING or nowhere.
 - **Report only real findings.** Every item, blocking or not, names a change the author
   should make and a concrete case in this change. Leave out notes that something is
   acceptable or fine, run logs that support no finding (a command and its result go

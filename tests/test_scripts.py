@@ -1951,8 +1951,7 @@ class StandaloneSkillTests(unittest.TestCase):
 
 class ReviewScopeTests(unittest.TestCase):
     """Reviews block only on the requirement's normal use, and the fix loop cannot grow
-    scope on its own: spec non-blockers stay out, a fix-on-fix round brakes, and the
-    author may object to hardening for requirement-fidelity to rule."""
+    scope on its own: spec non-blockers stay out, and a fix-on-fix round brakes."""
 
     def read(self, *parts):
         with open(os.path.join(REPO, *parts), encoding="utf-8") as fh:
@@ -2019,58 +2018,15 @@ class ReviewScopeTests(unittest.TestCase):
                    if line.startswith("| attack-the-premise |"))
         self.assertIn("a review round's blockers all land in code the previous fix added", row)
         self.assertIn("Two fixes sharing a premise fail the same gate", row)
-    def test_author_may_object_to_hardening(self):
-        fix = self.fix_section()
-        objection = fix[fix.index("**Objection.**"):]
-        for token in ("asks for hardening", "input crafted on purpose by a user the requirement does not name",
-                      "when the phase's panel includes `requirement-fidelity`",
-                      "leave it unfixed and log `objection(<lens>#<n>): <why>`",
-                      "Never object to an error under normal use, malformed boundary input or an existing-code defect",
-                      '`<lens>#<n> "<gist>" objection: <why>`', "Its ruling is final",
-                      "UPHELD closes the item as NON-BLOCKING",
-                      "OVERRULED keeps it open for the next fix, with no second objection",
-                      "Every objection gets its ruling from the `requirement-fidelity` lens of the "
-                      "re-review round that follows its fix",
-                      "The last round the cap allows has no next round, so it gets no fix and no "
-                      "objection: its open blockers stay open for the caller (The loop)"):
-            with self.subTest(token=token):
-                self.assertIn(token, objection)
-        self.assertNotIn("a fix runs only when the cap allows another round", objection)
-        rounds = flat(self.read("references", "review-round.md"))
-        loop = rounds[rounds.index("## The loop"):rounds.index("### The fix")]
-        self.assertIn("plus `requirement-fidelity` when an objection awaits its ruling", loop)
-
-    def test_upheld_objection_counts_as_non_blocking(self):
-        rounds = flat(self.read("references", "review-round.md"))
-        judge = rounds[rounds.index("**Judge and log.**"):rounds.index("## The loop")]
-        self.assertIn("never override one, downgrade a blocker, or mark an item INVALID yourself", judge)
-        self.assertIn("An item `requirement-fidelity` UPHELD (The fix: Objection) counts as NON-BLOCKING "
-                      "for its lens, whatever that lens's verdict", judge)
-
-    def test_fidelity_rules_on_objections(self):
-        text = self.read("agents", "requirement-fidelity-reviewer.md")
-        self.assertLess(text.index("## Objections"), text.index("## Verdict grammar (strict)"))
-        section = flat(text[text.index("## Objections"):text.index("## Verdict grammar (strict)")])
-        for token in ('`<lens>#<n> "<gist>" objection: <why>`', "Rulings:",
-                      "- <lens>#<n>: UPHELD | OVERRULED — <evidence>",
-                      "UPHELD only when the item fails only under input crafted on purpose by a user the requirement does not name",
-                      "OVERRULED when it is an error under the normal use the requirement describes",
-                      "malformed input at a system boundary", "a defect in existing code",
-                      "Your ruling is final"):
-            with self.subTest(token=token):
-                self.assertIn(token, section)
-
-    def test_one_fix_wording_admits_objections(self):
-        rounds = flat(self.read("references", "review-round.md"))
-        self.assertIn("make ONE fix over all blockers, fixing or objecting to each", rounds)
-        self.assertIn("Fix, or object to (Objection), all deduped open blockers yourself in one pass", rounds)
+    def test_no_objection_flow(self):
+        rounds = self.read("references", "review-round.md")
+        self.assertNotIn("Objection", rounds)
+        self.assertIn("Fix all deduped open blockers yourself in one pass", flat(rounds))
+        self.assertNotIn("## Objections", self.read("agents", "requirement-fidelity-reviewer.md"))
         common = self.read("references", "updraft-common.md")
-        fixes = flat(common[common.index("## S6 fixes"):common.index("## Publish")])
-        for token in ("Reproduce each blocker you do not object to (review-round.md, The fix: Objection) first",
-                      "A round whose every blocker is objected to commits an empty fix (`git commit --allow-empty`)",
-                      "so resume sees the fix as committed"):
-            with self.subTest(token=token):
-                self.assertIn(token, fixes)
+        fixes = common[common.index("## S6 fixes"):common.index("## Publish")]
+        self.assertNotIn("object", fixes)
+        self.assertNotIn("--allow-empty", fixes)
 
 class PstackLibraryTests(unittest.TestCase):
     """The vendored pstack skills ship with their notice, stay out of implicit invocation on

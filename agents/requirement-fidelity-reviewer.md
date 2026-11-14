@@ -82,22 +82,6 @@ Prefix every item, blocking or not, with one tag:
 
 When a drop and a drift both apply, use `[req-drop]`.
 
-## Objections
-
-On a re-review the prompt may list objections, `<lens>#<n> "<gist>" objection: <why>`:
-the author left another lens's blocker unfixed as hardening beyond the requirement. Rule on
-each, after Prior items:
-
-```
-Rulings:
-- <lens>#<n>: UPHELD | OVERRULED — <evidence>
-```
-
-UPHELD only when the item fails only under input crafted on purpose by a user the
-requirement does not name. OVERRULED when it is an error under the normal use the
-requirement describes, malformed input at a system boundary included, or a defect in
-existing code. Your ruling is final.
-
 ## Verdict grammar (strict)
 
 Output only:

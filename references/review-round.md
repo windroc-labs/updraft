@@ -96,15 +96,17 @@ Run each round in these steps:
 10. **Judge and log.** A lens passes with VERDICT PASS and no open BLOCKING; a dispatched
    lens with a missing or unparseable verdict is FAIL. Only the reviewers' and the CI
    script's own verdicts decide: never override one, downgrade a blocker, or mark an
-   item INVALID yourself. Log the round.
+   item INVALID yourself. An item `requirement-fidelity` UPHELD (The fix: Objection)
+   counts as NON-BLOCKING for its lens, whatever that lens's verdict. Log the round.
 
 Re-run an interrupted round whole: the frozen panel and round number.
 
 ## The loop
 
 `r1` runs the full frozen panel. While any lens fails and the cap allows another round,
-make ONE fix over all blockers, then run ONE re-review round with the caller's re-review
-set, plus every lens that has not yet reviewed in the phase; lenses outside the set
+make ONE fix over all blockers, fixing or objecting to each, then run ONE re-review round
+with the caller's re-review set, plus every lens that has not yet reviewed in the phase,
+plus `requirement-fidelity` when an objection awaits its ruling; lenses outside the set
 carry their PASS. When every lens passes, the phase passes.
 At the cap without a pass, the caller says what happens.
 
@@ -115,8 +117,8 @@ Before your first fix of the run, read
 [`../skills/principle-attack-the-premise/SKILL.md`](../skills/principle-attack-the-premise/SKILL.md)
 in full, once; follow them in every fix.
 
-Fix all deduped open blockers yourself in one pass, from their full text,
-their item IDs and the locations they cite.
+Fix, or object to (Objection), all deduped open blockers yourself in one pass, from their
+full text, their item IDs and the locations they cite.
 
 **Brake.** From `r2` on, before fixing: if every open blocker sits in code the previous
 fix added (work: a `+` line of `git -C <worktree> diff <pre-fix HEAD>..<fix commit>` of
@@ -125,3 +127,14 @@ that fix; spec: text that fix added), stop patching. Per
 premise of that fix's design and test it, then make this round's fix a redesign of that
 code, not another guard on it. Log `brake(r<N>): <premise> -> <redesign>`. It is the
 round's one fix; the cap stays.
+
+**Objection.** A blocker that asks for hardening, a guard against input crafted on purpose
+by a user the requirement does not name (Contract "Blockers are defects" in
+[`../agents/reviewer-contract.md`](../agents/reviewer-contract.md)), may be objected to
+instead of fixed, when the phase's panel includes `requirement-fidelity`: leave it unfixed
+and log `objection(<lens>#<n>): <why>`. Never object to an error under normal use,
+malformed boundary input or an existing-code defect. The next round's
+`requirement-fidelity` prompt lists each objection as `<lens>#<n> "<gist>" objection: <why>`.
+Its ruling is final: UPHELD closes the item as NON-BLOCKING; OVERRULED keeps it open for
+the next fix, with no second objection. Every objection gets its ruling: a fix runs only
+when the cap allows another round (The loop).

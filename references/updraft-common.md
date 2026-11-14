@@ -212,11 +212,14 @@ with a logged `decision(panel)` line naming it and why.
 Fix the code yourself, per review-round.md (The fix), and:
 
 - Record HEAD before each fix; the re-review diff starts there.
-- Fix causes, not symptoms. Reproduce each blocker first (run its case where one exists,
-  else trace it) and fix it where it originates. Fix the same pattern within the change's
+- Fix causes, not symptoms. Reproduce each blocker you do not object to (review-round.md,
+  The fix: Objection) first (run its case where one exists, else trace it) and fix it
+  where it originates. Fix the same pattern within the change's
   scope; log matches outside it as `deferred` lines for the S7 report. A guard that
   silences a symptom is not a fix.
 - Commit the round's fix as one commit, `fix(r<N>): <item IDs>`, before the re-review. The re-review then pins it.
+  A round whose every blocker is objected to commits an empty fix
+  (`git commit --allow-empty`), so resume sees the fix as committed.
 
 ## Publish
 

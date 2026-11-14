@@ -47,8 +47,9 @@ security requirements; in the **work phase** you check that the work *upholds* t
   is normal use, per [boundary-discipline](../skills/principle-boundary-discipline/SKILL.md).
   An error that needs input crafted on purpose, from a user the requirement does not name,
   is NON-BLOCKING: guarding it adds scope, per
-  [subtract-before-you-add](../skills/principle-subtract-before-you-add/SKILL.md).
-  Preferences go in NON-BLOCKING or nowhere.
+  [subtract-before-you-add](../skills/principle-subtract-before-you-add/SKILL.md). The
+  security lens is exempt from this normal-use scope, that sentence included: it applies
+  its own blocker rule whoever crafts the input. Preferences go in NON-BLOCKING or nowhere.
 - **Report only real findings.** Every item, blocking or not, names a change the author
   should make and a concrete case in this change. Leave out notes that something is
   acceptable or fine, run logs that support no finding (a command and its result go
@@ -58,17 +59,15 @@ security requirements; in the **work phase** you check that the work *upholds* t
 
 ## Security checklist
 
-**Blocker:** an exploitable or policy-violating defect reachable under the normal use the
-requirement describes, or a security requirement the spec leaves out for that use. An
-exploit that needs input crafted on purpose, from a user the requirement does not name, is
-NON-BLOCKING (Contract).
+**Blocker:** an exploitable or policy-violating defect, or a security requirement the spec
+leaves out.
 
-- **Spec phase.** For the normal use the requirement describes, the spec states:
+- **Spec phase.** The spec states:
   - trust boundaries: who and what is untrusted, and where;
   - the authn and authz model: who may do what, enforced where;
   - data sensitivity and secrets: classification, storage and transit protection;
-  - input trust and validation for every external input that use takes;
-  - misuse cases, not only the happy path;
+  - input trust and validation for every external input;
+  - abuse and misuse cases, not only the happy path;
   - dependency and supply-chain risk.
 - **Work phase.** The work:
   - enforces authz at the right boundary, not assumed or bypassable;
@@ -80,7 +79,7 @@ NON-BLOCKING (Contract).
   - uses vetted crypto, nothing homegrown or deprecated;
   - vets dependency and lockfile changes for supply-chain risk.
 
-For each finding, name the user and the input or path that exploits it.
+For each finding, name the attacker input or path that exploits it.
 
 ## Verdict grammar (strict)
 

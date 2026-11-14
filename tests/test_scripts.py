@@ -1964,7 +1964,10 @@ class ReviewScopeTests(unittest.TestCase):
                       "a defect in existing code counts too",
                       "(command-line arguments, config files, external interfaces)", "is normal use",
                       "crafted on purpose, from a user the requirement does not name",
-                      "is NON-BLOCKING", "Preferences go in NON-BLOCKING or nowhere"):
+                      "is NON-BLOCKING",
+                      "The security lens is exempt from this normal-use scope, that sentence included",
+                      "it applies its own blocker rule whoever crafts the input",
+                      "Preferences go in NON-BLOCKING or nowhere"):
             with self.subTest(token=token):
                 self.assertIn(token, rule)
         for name in ("boundary-discipline", "subtract-before-you-add"):
@@ -1973,23 +1976,18 @@ class ReviewScopeTests(unittest.TestCase):
                 self.assertIn(f"({link})", rule)
                 self.assertTrue(os.path.exists(os.path.join(REPO, "agents", link)), link)
 
-    def test_security_blocks_on_normal_use(self):
+    def test_security_checklist_unchanged(self):
         text = flat(self.read("agents", "security-reviewer.md"))
         checklist = text[text.index("## Security checklist"):text.index("## Verdict grammar (strict)")]
-        for token in ("defect reachable under the normal use the requirement describes",
-                      "a security requirement the spec leaves out for that use",
-                      "An exploit that needs input crafted on purpose, from a user the requirement "
-                      "does not name, is NON-BLOCKING (Contract)",
-                      "For the normal use the requirement describes, the spec states:",
-                      "input trust and validation for every external input that use takes",
-                      "misuse cases, not only the happy path",
-                      "name the user and the input or path that exploits it"):
+        for token in ("**Blocker:** an exploitable or policy-violating defect, or a security "
+                      "requirement the spec leaves out.",
+                      "- **Spec phase.** The spec states:",
+                      "input trust and validation for every external input;",
+                      "abuse and misuse cases, not only the happy path;",
+                      "name the attacker input or path that exploits it"):
             with self.subTest(token=token):
                 self.assertIn(token, checklist)
-        for gone in ("abuse and misuse cases", "a user the requirement names",
-                     "users the requirement names", "an attacker the requirement does not name"):
-            with self.subTest(gone=gone):
-                self.assertNotIn(gone, checklist)
+
     def test_spec_review_keeps_non_blockers_out_of_spec(self):
         text = self.read("skills", "build", "SKILL.md")
         s3 = flat(text[text.index("### S3. Spec review"):text.index("### S4. Task list")])

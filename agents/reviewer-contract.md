@@ -40,8 +40,9 @@ reviewer.
   is normal use, per [boundary-discipline](../skills/principle-boundary-discipline/SKILL.md).
   An error that needs input crafted on purpose, from a user the requirement does not name,
   is NON-BLOCKING: guarding it adds scope, per
-  [subtract-before-you-add](../skills/principle-subtract-before-you-add/SKILL.md).
-  Preferences go in NON-BLOCKING or nowhere.
+  [subtract-before-you-add](../skills/principle-subtract-before-you-add/SKILL.md). The
+  security lens is exempt from this normal-use scope, that sentence included: it applies
+  its own blocker rule whoever crafts the input. Preferences go in NON-BLOCKING or nowhere.
 - **Report only real findings.** Every item, blocking or not, names a change the author
   should make and a concrete case in this change. Leave out notes that something is
   acceptable or fine, run logs that support no finding (a command and its result go

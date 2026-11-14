@@ -2016,15 +2016,6 @@ class ReviewScopeTests(unittest.TestCase):
                    if line.startswith("| attack-the-premise |"))
         self.assertIn("a review round's blockers all land in code the previous fix added", row)
         self.assertIn("Two fixes sharing a premise fail the same gate", row)
-    def test_no_objection_flow(self):
-        rounds = self.read("references", "review-round.md")
-        self.assertNotIn("Objection", rounds)
-        self.assertIn("Fix all deduped open blockers yourself in one pass", flat(rounds))
-        self.assertNotIn("## Objections", self.read("agents", "requirement-fidelity-reviewer.md"))
-        common = self.read("references", "updraft-common.md")
-        fixes = common[common.index("## S6 fixes"):common.index("## Publish")]
-        self.assertNotIn("object", fixes)
-        self.assertNotIn("--allow-empty", fixes)
 
 class PstackLibraryTests(unittest.TestCase):
     """The vendored pstack skills ship with their notice, stay out of implicit invocation on

@@ -1987,6 +1987,14 @@ class ReviewScopeTests(unittest.TestCase):
             with self.subTest(token=token):
                 self.assertIn(token, checklist)
         self.assertNotIn("abuse and misuse cases", checklist)
+    def test_spec_review_keeps_non_blockers_out_of_spec(self):
+        text = self.read("skills", "build", "SKILL.md")
+        s3 = flat(text[text.index("### S3. Spec review"):text.index("### S4. Task list")])
+        for token in ("Fix the spec doc yourself, for blockers only",
+                      "log NON-BLOCKING items in the review items",
+                      "never write them into the spec"):
+            with self.subTest(token=token):
+                self.assertIn(token, s3)
 
 class PstackLibraryTests(unittest.TestCase):
     """The vendored pstack skills ship with their notice, stay out of implicit invocation on

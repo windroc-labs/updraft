@@ -58,15 +58,16 @@ security requirements; in the **work phase** you check that the work *upholds* t
 
 ## Security checklist
 
-**Blocker:** an exploitable or policy-violating defect that a user the requirement names
-can reach, or a security requirement the spec leaves out for such a user. An exploit that
-needs an attacker the requirement does not name is NON-BLOCKING (Contract).
+**Blocker:** an exploitable or policy-violating defect reachable under the normal use the
+requirement describes, or a security requirement the spec leaves out for that use. An
+exploit that needs input crafted on purpose, from a user the requirement does not name, is
+NON-BLOCKING (Contract).
 
-- **Spec phase.** For the users the requirement names, the spec states:
+- **Spec phase.** For the normal use the requirement describes, the spec states:
   - trust boundaries: who and what is untrusted, and where;
   - the authn and authz model: who may do what, enforced where;
   - data sensitivity and secrets: classification, storage and transit protection;
-  - input trust and validation for every external input they give;
+  - input trust and validation for every external input that use takes;
   - misuse cases, not only the happy path;
   - dependency and supply-chain risk.
 - **Work phase.** The work:

@@ -136,5 +136,7 @@ and log `objection(<lens>#<n>): <why>`. Never object to an error under normal us
 malformed boundary input or an existing-code defect. The next round's
 `requirement-fidelity` prompt lists each objection as `<lens>#<n> "<gist>" objection: <why>`.
 Its ruling is final: UPHELD closes the item as NON-BLOCKING; OVERRULED keeps it open for
-the next fix, with no second objection. Every objection gets its ruling: a fix runs only
-when the cap allows another round (The loop).
+the next fix, with no second objection. Every objection gets its ruling from the
+`requirement-fidelity` lens of the re-review round that follows its fix. The last round
+the cap allows has no next round, so it gets no fix and no objection: its open blockers
+stay open for the caller (The loop).

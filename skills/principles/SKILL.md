@@ -13,7 +13,7 @@ path, such as `/updraft:principle-fix-root-causes` in Claude Code.
 
 | Name | When it applies | File |
 | --- | --- | --- |
-| attack-the-premise | Two fixes sharing a premise fail the same gate, or a review round's blockers all land in code the previous fix added; test that premise before another fix. | `../principle-attack-the-premise/SKILL.md` |
+| attack-the-premise | Two fixes sharing a premise fail the same gate; test that premise before another fix. | `../principle-attack-the-premise/SKILL.md` |
 | boundary-discipline | Validation, error handling or adapters; guard boundaries and keep business logic pure. | `../principle-boundary-discipline/SKILL.md` |
 | build-the-lever | Nontrivial work; build the smallest rerunnable tool that does or proves it. | `../principle-build-the-lever/SKILL.md` |
 | encode-lessons-in-structure | Writing the same instruction a second time or noticing a recurring correction; encode the rule as a lint, metadata flag, runtime check or script. | `../principle-encode-lessons-in-structure/SKILL.md` |

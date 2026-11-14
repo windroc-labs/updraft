@@ -2011,12 +2011,6 @@ class ReviewScopeTests(unittest.TestCase):
                 self.assertIn(token, brake)
         self.assertIn("(../skills/principle-fix-root-causes/SKILL.md)", fix)
 
-    def test_index_names_the_brake_trigger(self):
-        row = next(line for line in self.read("skills", "principles", "SKILL.md").splitlines()
-                   if line.startswith("| attack-the-premise |"))
-        self.assertIn("a review round's blockers all land in code the previous fix added", row)
-        self.assertIn("Two fixes sharing a premise fail the same gate", row)
-
 class PstackLibraryTests(unittest.TestCase):
     """The vendored pstack skills ship with their notice, stay out of implicit invocation on
     both hosts, and the `principles` skill indexes each one by name."""

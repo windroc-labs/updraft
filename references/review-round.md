@@ -117,3 +117,11 @@ in full, once; follow them in every fix.
 
 Fix all deduped open blockers yourself in one pass, from their full text,
 their item IDs and the locations they cite.
+
+**Brake.** From `r2` on, before fixing: if every open blocker sits in code the previous
+fix added (work: a `+` line of `git -C <worktree> diff <pre-fix HEAD>..<fix commit>` of
+that fix; spec: text that fix added), stop patching. Per
+[attack-the-premise](../skills/principle-attack-the-premise/SKILL.md), write down the
+premise of that fix's design and test it, then make this round's fix a redesign of that
+code, not another guard on it. Log `brake(r<N>): <premise> -> <redesign>`. It is the
+round's one fix; the cap stays.

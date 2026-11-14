@@ -1995,6 +1995,26 @@ class ReviewScopeTests(unittest.TestCase):
                       "never write them into the spec"):
             with self.subTest(token=token):
                 self.assertIn(token, s3)
+    def fix_section(self):
+        rounds = self.read("references", "review-round.md")
+        return flat(rounds[rounds.index("### The fix"):])
+
+    def test_fix_brakes_when_blockers_sit_in_fix_code(self):
+        fix = self.fix_section()
+        brake = fix[fix.index("**Brake.**"):]
+        for token in ("From `r2` on", "every open blocker sits in code the previous fix added",
+                      "stop patching", "(../skills/principle-attack-the-premise/SKILL.md)",
+                      "a redesign of that code", "`brake(r<N>): <premise> -> <redesign>`",
+                      "the cap stays"):
+            with self.subTest(token=token):
+                self.assertIn(token, brake)
+        self.assertIn("(../skills/principle-fix-root-causes/SKILL.md)", fix)
+
+    def test_index_names_the_brake_trigger(self):
+        row = next(line for line in self.read("skills", "principles", "SKILL.md").splitlines()
+                   if line.startswith("| attack-the-premise |"))
+        self.assertIn("a review round's blockers all land in code the previous fix added", row)
+        self.assertIn("Two fixes sharing a premise fail the same gate", row)
 
 class PstackLibraryTests(unittest.TestCase):
     """The vendored pstack skills ship with their notice, stay out of implicit invocation on

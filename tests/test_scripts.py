@@ -1949,6 +1949,74 @@ class StandaloneSkillTests(unittest.TestCase):
         self.assertNotIn("what that fix assumed", fix)
 
 
+class ReviewScopeTests(unittest.TestCase):
+    """Reviews block only on the requirement's normal use, and the fix loop cannot grow
+    scope on its own: spec non-blockers stay out, and a fix-on-fix round brakes."""
+
+    def read(self, *parts):
+        with open(os.path.join(REPO, *parts), encoding="utf-8") as fh:
+            return fh.read()
+
+    def test_contract_blocks_only_normal_use(self):
+        text = self.read("agents", "reviewer-contract.md")
+        rule = flat(text[text.index("- **Blockers are defects.**"):text.index("- **Report only real findings.**")])
+        for token in ("errors under the normal use the requirement describes",
+                      "a defect in existing code counts too",
+                      "(command-line arguments, config files, external interfaces)", "is normal use",
+                      "crafted on purpose, from a user the requirement does not name",
+                      "is NON-BLOCKING",
+                      "The security lens is exempt from this normal-use scope, that sentence included",
+                      "it applies its own blocker rule whoever crafts the input",
+                      "Preferences go in NON-BLOCKING or nowhere"):
+            with self.subTest(token=token):
+                self.assertIn(token, rule)
+        for name in ("boundary-discipline", "subtract-before-you-add"):
+            link = f"../skills/principle-{name}/SKILL.md"
+            with self.subTest(principle=name):
+                self.assertIn(f"({link})", rule)
+                self.assertTrue(os.path.exists(os.path.join(REPO, "agents", link)), link)
+
+    def test_security_checklist_unchanged(self):
+        text = flat(self.read("agents", "security-reviewer.md"))
+        checklist = text[text.index("## Security checklist"):text.index("## Verdict grammar (strict)")]
+        for token in ("**Blocker:** an exploitable or policy-violating defect, or a security "
+                      "requirement the spec leaves out.",
+                      "- **Spec phase.** The spec states:",
+                      "input trust and validation for every external input;",
+                      "abuse and misuse cases, not only the happy path;",
+                      "name the attacker input or path that exploits it"):
+            with self.subTest(token=token):
+                self.assertIn(token, checklist)
+
+    def test_spec_review_keeps_non_blockers_out_of_spec(self):
+        text = self.read("skills", "build", "SKILL.md")
+        s3 = flat(text[text.index("### S3. Spec review"):text.index("### S4. Task list")])
+        for token in ("Fix the spec doc yourself, for blockers only",
+                      "log NON-BLOCKING items in the review items",
+                      "never write them into the spec"):
+            with self.subTest(token=token):
+                self.assertIn(token, s3)
+    def fix_section(self):
+        rounds = self.read("references", "review-round.md")
+        return flat(rounds[rounds.index("### The fix"):])
+
+    def test_fix_brakes_when_blockers_sit_in_fix_code(self):
+        fix = self.fix_section()
+        brake = fix[fix.index("**Brake.**"):]
+        for token in ("From `r2` on", "every open blocker sits in code the previous fix added",
+                      "stop patching", "(../skills/principle-attack-the-premise/SKILL.md)",
+                      "a redesign of that code", "`brake(r<N>): <premise> -> <redesign>`",
+                      "the cap stays"):
+            with self.subTest(token=token):
+                self.assertIn(token, brake)
+        self.assertIn("(../skills/principle-fix-root-causes/SKILL.md)", fix)
+
+    def test_index_names_the_brake_trigger(self):
+        row = next(line for line in self.read("skills", "principles", "SKILL.md").splitlines()
+                   if line.startswith("| attack-the-premise |"))
+        self.assertIn("a review round's blockers all land in code the previous fix added", row)
+        self.assertIn("Two fixes sharing a premise fail the same gate", row)
+
 class PstackLibraryTests(unittest.TestCase):
     """The vendored pstack skills ship with their notice, stay out of implicit invocation on
     both hosts, and the `principles` skill indexes each one by name."""

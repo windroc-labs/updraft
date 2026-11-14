@@ -42,7 +42,8 @@ Skipped in spec-file mode. Read the affected code, then write the spec doc follo
 ### S3. Spec review
 
 Skipped in spec-file mode. Run the review loop over the spec with the S3 settings below.
-Fix the spec doc yourself. A root contradiction is safety stop 4.
+Fix the spec doc yourself, for blockers only: log NON-BLOCKING items in the review items
+and never write them into the spec. A root contradiction is safety stop 4.
 
 ### S4. Task list
 

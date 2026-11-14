@@ -1974,6 +1974,19 @@ class ReviewScopeTests(unittest.TestCase):
                 self.assertIn(f"({link})", rule)
                 self.assertTrue(os.path.exists(os.path.join(REPO, "agents", link)), link)
 
+    def test_security_blocks_only_for_named_users(self):
+        text = flat(self.read("agents", "security-reviewer.md"))
+        checklist = text[text.index("## Security checklist"):text.index("## Verdict grammar (strict)")]
+        for token in ("defect that a user the requirement names can reach",
+                      "a security requirement the spec leaves out for such a user",
+                      "An exploit that needs an attacker the requirement does not name is NON-BLOCKING",
+                      "For the users the requirement names, the spec states:",
+                      "input trust and validation for every external input they give",
+                      "misuse cases, not only the happy path",
+                      "name the user and the input or path that exploits it"):
+            with self.subTest(token=token):
+                self.assertIn(token, checklist)
+        self.assertNotIn("abuse and misuse cases", checklist)
 
 class PstackLibraryTests(unittest.TestCase):
     """The vendored pstack skills ship with their notice, stay out of implicit invocation on

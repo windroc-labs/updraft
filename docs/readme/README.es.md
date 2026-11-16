@@ -201,7 +201,6 @@ reviewers ordinarios son de solo lectura y nunca ejecutan la suite completa.
 | `requirement-fidelity-reviewer.md` | El requirement y la spec construidos, sin nada que falte, se desvíe o sobre | work | core |
 | `doc-reviewer.md` | Documentación en cualquier parte del repositorio que el cambio volvió falsa; ediciones de documentación infladas | work | core |
 | `verification-reviewer.md` | Comprobaciones completas en el SHA revisado cuando la verificación es local: comandos, códigos de salida, recuentos de tests y fallos | work | core |
-| `code-quality-reviewer.md` | Legibilidad, nombres, duplicación, código muerto, complejidad, comentarios | work | optional: archivos de código |
 | `test-reviewer.md` | Los tests verifican la spec y cubren el código nuevo o cambiado | work | optional: archivos de código o de test |
 | `performance-reviewer.md` | Complejidad, N+1, asignación de memoria, fugas, puntos calientes | work | optional: archivos de código |
 | `security-reviewer.md` | Autorización, validación de entradas, secretos, inyección, cadena de suministro | both | optional: señales de autenticación, entrada, red, E/S, dependencias o criptografía |

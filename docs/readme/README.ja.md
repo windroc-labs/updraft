@@ -184,7 +184,6 @@ run はこれと `git log` から復元します。同じ requirement をもう�
 | `requirement-fidelity-reviewer.md` | requirement と spec が実装され、欠落・逸脱・追加がない | work | core |
 | `doc-reviewer.md` | 変更によって事実と合わなくなったリポジトリ内のドキュメント。肥大化したドキュメント編集 | work | core |
 | `verification-reviewer.md` | verification がローカルのとき、レビュー対象の SHA でのフルチェック: コマンド、終了コード、テスト数と失敗数 | work | core |
-| `code-quality-reviewer.md` | 可読性、命名、重複、デッドコード、複雑さ、コメント | work | optional: コードファイル |
 | `test-reviewer.md` | テストが spec をアサートし、新規・変更コードをカバーしている | work | optional: コードまたはテストファイル |
 | `performance-reviewer.md` | 計算量、N+1、メモリ確保、リーク、ホットスポット | work | optional: コードファイル |
 | `security-reviewer.md` | 認可、入力検証、シークレット、インジェクション、サプライチェーン | both | optional: 認証、入力、ネットワーク、I/O、依存関係、暗号のシグナル |

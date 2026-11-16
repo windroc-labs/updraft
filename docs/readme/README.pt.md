@@ -197,7 +197,6 @@ somente leitura e nunca rodam a suíte completa.
 | `requirement-fidelity-reviewer.md` | O requirement e a spec construídos, sem nada faltando, desviado ou a mais | work | core |
 | `doc-reviewer.md` | Documentação em qualquer lugar do repositório que a mudança tornou falsa; edições de documentação inchadas | work | core |
 | `verification-reviewer.md` | Verificações completas no SHA revisado quando a verificação é local: comandos, códigos de saída, contagens de testes e falhas | work | core |
-| `code-quality-reviewer.md` | Legibilidade, nomes, duplicação, código morto, complexidade, comentários | work | optional: arquivos de código |
 | `test-reviewer.md` | Os testes verificam a spec e cobrem o código novo ou alterado | work | optional: arquivos de código ou de teste |
 | `performance-reviewer.md` | Complexidade, N+1, alocação, vazamentos, pontos críticos | work | optional: arquivos de código |
 | `security-reviewer.md` | Autorização, validação de entrada, segredos, injeção, cadeia de suprimentos | both | optional: sinais de autenticação, entrada, rede, E/S, dependências ou criptografia |

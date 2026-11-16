@@ -186,7 +186,6 @@ Notes 以及 task list。上下文压缩之后，run 会依据它和 `git log` �
 | `requirement-fidelity-reviewer.md` | requirement 和 spec 已实现，没有遗漏、偏离或多加 | work | core |
 | `doc-reviewer.md` | 仓库中任何因改动而变得不实的文档；臃肿的文档修改 | work | core |
 | `verification-reviewer.md` | verification 在本地运行时，在被审 SHA 上运行完整检查：命令、退出码、测试数和失败数 | work | core |
-| `code-quality-reviewer.md` | 可读性、命名、重复、死代码、复杂度、注释 | work | optional：代码文件 |
 | `test-reviewer.md` | 测试断言了 spec，并覆盖新增或改动的代码 | work | optional：代码或测试文件 |
 | `performance-reviewer.md` | 复杂度、N+1、内存分配、泄漏、热点 | work | optional：代码文件 |
 | `security-reviewer.md` | 授权、输入校验、密钥、注入、供应链 | both | optional：认证、输入、网络、I/O、依赖或加密相关信号 |

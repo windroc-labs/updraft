@@ -202,7 +202,6 @@ ordinaires sont en lecture seule et ne lancent jamais la suite complète.
 | `requirement-fidelity-reviewer.md` | Le requirement et la spec réalisés, sans rien de manquant, de dévié ou d'ajouté | work | core |
 | `doc-reviewer.md` | Les docs du dépôt que le changement a rendues fausses ; les modifications de docs gonflées | work | core |
 | `verification-reviewer.md` | Vérifications complètes au SHA relu quand la vérification est locale : commandes, codes de sortie, nombres de tests et d'échecs | work | core |
-| `code-quality-reviewer.md` | Lisibilité, nommage, duplication, code mort, complexité, commentaires | work | optional : fichiers de code |
 | `test-reviewer.md` | Les tests vérifient la spec et couvrent le code nouveau ou modifié | work | optional : fichiers de code ou de test |
 | `performance-reviewer.md` | Complexité, N+1, allocations, fuites, points chauds | work | optional : fichiers de code |
 | `security-reviewer.md` | Autorisations, validation des entrées, secrets, injection, chaîne d'approvisionnement | both | optional : signaux d'authentification, d'entrée, de réseau, d'E/S, de dépendances ou de cryptographie |

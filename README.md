@@ -216,7 +216,6 @@ reviewers are read-only and never run the full suite.
 | `requirement-fidelity-reviewer.md` | The requirement and spec built, nothing missing, drifted or added | work | core |
 | `doc-reviewer.md` | Docs anywhere in the repo the change made false; bloated doc edits | work | core |
 | `verification-reviewer.md` | Full checks at the reviewed SHA when verification runs locally: commands, exit codes, test and failure counts | work | core |
-| `code-quality-reviewer.md` | Readability, naming, duplication, dead code, complexity, comments | work | optional: code files |
 | `test-reviewer.md` | Tests assert the spec and cover new or changed code | work | optional: code or test files |
 | `performance-reviewer.md` | Complexity, N+1, allocation, leaks, hotspots | work | optional: code files |
 | `security-reviewer.md` | Authz, input validation, secrets, injection, supply chain | both | optional: auth, input, network, I/O, dependency or crypto signals |

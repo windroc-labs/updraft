@@ -182,7 +182,6 @@ verify 명령, `RESUME:` 줄, 진행 로그, 리뷰 항목, 코드베이스 사�
 | `requirement-fidelity-reviewer.md` | requirement와 spec이 구현되었고 빠지거나, 벗어나거나, 더해진 것이 없음 | work | core |
 | `doc-reviewer.md` | 변경 때문에 사실과 달라진 저장소 내 문서. 비대해진 문서 수정 | work | core |
 | `verification-reviewer.md` | verification이 로컬일 때 리뷰 대상 SHA에서의 전체 검사: 명령, 종료 코드, 테스트 수와 실패 수 | work | core |
-| `code-quality-reviewer.md` | 가독성, 이름, 중복, 죽은 코드, 복잡도, 주석 | work | optional: 코드 파일 |
 | `test-reviewer.md` | 테스트가 spec을 검증하고 새로 추가되거나 바뀐 코드를 다룸 | work | optional: 코드 또는 테스트 파일 |
 | `performance-reviewer.md` | 복잡도, N+1, 메모리 할당, 누수, 핫스팟 | work | optional: 코드 파일 |
 | `security-reviewer.md` | 인가, 입력 검증, 시크릿, 인젝션, 공급망 | both | optional: 인증, 입력, 네트워크, I/O, 의존성 또는 암호화 신호 |
